@@ -4,10 +4,9 @@ import {
   WorkoutExercise, 
   ExerciseDefinition, 
   WorkoutSet, 
-  ExerciseType,
-  MuscleGroup 
+  ExerciseType 
 } from '../types';
-import { Plus, Trash2, Check, MoreVertical, Search, X, Clock, Activity } from 'lucide-react';
+import { Plus, Trash2, Check, MoreVertical, Search, X, Clock } from 'lucide-react';
 
 interface ActiveSessionViewProps {
   session: WorkoutSession | null;
@@ -15,7 +14,7 @@ interface ActiveSessionViewProps {
   onUpdateSession: (session: WorkoutSession) => void;
   onFinishSession: () => void;
   onCancelSession: () => void;
-  onAddCustomExercise: (newExercise: ExerciseDefinition) => void;
+  onRequestCreateExercise: () => void; 
 }
 
 const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({ 
@@ -24,18 +23,12 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   onUpdateSession, 
   onFinishSession,
   onCancelSession,
-  onAddCustomExercise
+  onRequestCreateExercise
 }) => {
   const [isExerciseModalOpen, setExerciseModalOpen] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // New Exercise Form State
-  const [isCreatingExercise, setIsCreatingExercise] = useState(false);
-  const [newExerciseName, setNewExerciseName] = useState("");
-  const [newExerciseType, setNewExerciseType] = useState<ExerciseType>(ExerciseType.WEIGHTED);
-  const [newExerciseMuscle, setNewExerciseMuscle] = useState<MuscleGroup>(MuscleGroup.FULL_BODY);
-
   // Timer Logic
   useEffect(() => {
     if (!session) return;
@@ -80,22 +73,6 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
     });
     setExerciseModalOpen(false);
     setSearchQuery("");
-    setIsCreatingExercise(false);
-  };
-
-  const handleCreateAndAddExercise = () => {
-    if (!newExerciseName.trim()) return;
-    
-    const newDef: ExerciseDefinition = {
-      id: `custom_${crypto.randomUUID()}`,
-      name: newExerciseName,
-      muscleGroup: newExerciseMuscle,
-      type: newExerciseType,
-      isCustom: true
-    };
-    
-    onAddCustomExercise(newDef);
-    handleAddExercise(newDef);
   };
 
   const handleAddSet = (exerciseIndex: number) => {
@@ -125,6 +102,8 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
     e.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     e.muscleGroup.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Sort: Custom/Newest first? Or just alphabetical. Let's stick to default sort from props.
 
   return (
     <div className="pb-24">
@@ -272,112 +251,49 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
         </div>
       </div>
 
-      {/* Add Exercise Modal */}
+      {/* Add Exercise Search Modal */}
       {isExerciseModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex flex-col">
           <div className="p-4 border-b border-slate-700 flex items-center gap-3 bg-slate-900">
              <Search className="text-muted" size={20} />
              <input 
-              autoFocus={!isCreatingExercise}
+              autoFocus
               type="text" 
               placeholder="Søk etter øvelser..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent outline-none text-lg placeholder:text-slate-600 text-white"
              />
-             <button onClick={() => { setExerciseModalOpen(false); setIsCreatingExercise(false); }} className="p-2 bg-slate-800 rounded-full text-slate-400">
+             <button onClick={() => setExerciseModalOpen(false)} className="p-2 bg-slate-800 rounded-full text-slate-400">
                <X size={20} />
              </button>
           </div>
 
-          {!isCreatingExercise ? (
-             <div className="flex-1 overflow-y-auto p-4 space-y-3">
+           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <button 
+                onClick={() => onRequestCreateExercise()}
+                className="w-full p-4 mb-4 bg-primary/10 border border-primary/50 rounded-xl flex items-center justify-center text-primary font-bold"
+              >
+                <Plus size={18} className="mr-2" /> Lag ny øvelse
+              </button>
+
+              {filteredExercises.map(ex => (
                 <button 
-                  onClick={() => setIsCreatingExercise(true)}
-                  className="w-full p-4 mb-4 bg-primary/10 border border-primary/50 rounded-xl flex items-center justify-center text-primary font-bold"
+                 key={ex.id}
+                 onClick={() => handleAddExercise(ex)}
+                 className="w-full text-left p-4 bg-slate-800 rounded-xl border border-slate-700 hover:border-slate-500 flex justify-between items-center group"
                 >
-                  <Plus size={18} className="mr-2" /> Lag ny øvelse
+                   <div>
+                     <div className="font-semibold text-slate-200 group-hover:text-white transition-colors">{ex.name}</div>
+                     <div className="text-xs text-muted">{ex.muscleGroup} • {ex.type}</div>
+                   </div>
+                   <Plus size={18} className="text-muted group-hover:text-white" />
                 </button>
-
-                {filteredExercises.map(ex => (
-                  <button 
-                   key={ex.id}
-                   onClick={() => handleAddExercise(ex)}
-                   className="w-full text-left p-4 bg-slate-800 rounded-xl border border-slate-700 hover:border-slate-500 flex justify-between items-center group"
-                  >
-                     <div>
-                       <div className="font-semibold text-slate-200 group-hover:text-white transition-colors">{ex.name}</div>
-                       <div className="text-xs text-muted">{ex.muscleGroup} • {ex.type}</div>
-                     </div>
-                     <Plus size={18} className="text-muted group-hover:text-white" />
-                  </button>
-                ))}
-                {filteredExercises.length === 0 && (
-                  <div className="text-center text-muted mt-10">Ingen øvelser funnet.</div>
-                )}
-             </div>
-          ) : (
-            <div className="p-6 space-y-6">
-               <h3 className="text-xl font-bold text-white">Ny egen øvelse</h3>
-               
-               <div>
-                 <label className="block text-xs uppercase text-muted font-bold mb-2">Navn</label>
-                 <input 
-                   className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:border-primary outline-none"
-                   placeholder="F.eks. Motbakkeløp"
-                   value={newExerciseName}
-                   onChange={(e) => setNewExerciseName(e.target.value)}
-                 />
-               </div>
-
-               <div>
-                 <label className="block text-xs uppercase text-muted font-bold mb-2">Type</label>
-                 <div className="grid grid-cols-2 gap-2">
-                   {Object.values(ExerciseType).map((type) => (
-                     <button
-                       key={type}
-                       onClick={() => setNewExerciseType(type)}
-                       className={`p-3 rounded-lg text-sm font-medium border ${
-                         newExerciseType === type 
-                         ? 'bg-primary/20 border-primary text-primary' 
-                         : 'bg-slate-800 border-slate-700 text-slate-400'
-                       }`}
-                     >
-                       {type}
-                     </button>
-                   ))}
-                 </div>
-               </div>
-
-               <div>
-                 <label className="block text-xs uppercase text-muted font-bold mb-2">Kategori</label>
-                 <select 
-                   value={newExerciseMuscle}
-                   onChange={(e) => setNewExerciseMuscle(e.target.value as MuscleGroup)}
-                   className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white outline-none"
-                 >
-                   {Object.values(MuscleGroup).map(m => (
-                     <option key={m} value={m}>{m}</option>
-                   ))}
-                 </select>
-               </div>
-
-               <button 
-                 onClick={handleCreateAndAddExercise}
-                 disabled={!newExerciseName}
-                 className="w-full bg-primary disabled:opacity-50 text-white font-bold py-4 rounded-xl mt-4"
-               >
-                 Lagre og legg til
-               </button>
-               
-               <button 
-                 onClick={() => setIsCreatingExercise(false)}
-                 className="w-full text-muted text-sm font-medium py-2"
-               >
-                 Gå tilbake
-               </button>
-            </div>
-          )}
+              ))}
+              {filteredExercises.length === 0 && (
+                <div className="text-center text-muted mt-10">Ingen øvelser funnet.</div>
+              )}
+           </div>
         </div>
       )}
     </div>

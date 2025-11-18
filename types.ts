@@ -21,6 +21,8 @@ export interface ExerciseDefinition {
   name: string;
   muscleGroup: MuscleGroup;
   type: ExerciseType;
+  description?: string; // Instructions
+  imageUrl?: string; // URL to image/gif
   isCustom?: boolean;
 }
 

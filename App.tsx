@@ -16,7 +16,9 @@ import BottomNav from './components/BottomNav';
 import ExerciseCard from './components/ExerciseCard';
 import WorkoutHistoryCard from './components/WorkoutHistoryCard';
 import ActiveSessionView from './components/ActiveSessionView';
-import { TrendingUp, Calendar, Play, Heart } from 'lucide-react';
+import ExerciseDetailModal from './components/ExerciseDetailModal';
+import ExerciseFormModal from './components/ExerciseFormModal';
+import { TrendingUp, Calendar, Play, Heart, Plus } from 'lucide-react';
 
 const INITIAL_EXERCISES = createInitialExercises();
 const INITIAL_HISTORY = createInitialHistory();
@@ -28,6 +30,10 @@ export default function App() {
   const [exercises, setExercises] = useState<ExerciseDefinition[]>(INITIAL_EXERCISES);
   const [history, setHistory] = useState<WorkoutSession[]>(INITIAL_HISTORY);
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(null);
+  
+  // Modals State
+  const [viewingExercise, setViewingExercise] = useState<ExerciseDefinition | null>(null);
+  const [isCreatingExercise, setIsCreatingExercise] = useState(false);
 
   // --- Actions ---
 
@@ -62,8 +68,14 @@ export default function App() {
     }
   };
 
-  const handleAddCustomExercise = (newExercise: ExerciseDefinition) => {
-    setExercises([...exercises, newExercise]);
+  const handleSaveNewExercise = (newExercise: ExerciseDefinition) => {
+    setExercises([newExercise, ...exercises]);
+    setIsCreatingExercise(false);
+  };
+
+  const handleDeleteExercise = (id: string) => {
+    setExercises(exercises.filter(e => e.id !== id));
+    setViewingExercise(null);
   };
 
   // --- Views ---
@@ -171,10 +183,23 @@ export default function App() {
 
   const renderExercises = () => (
     <div className="p-4 pb-24 space-y-4">
-      <h1 className="text-2xl font-bold text-white mb-4 mt-2">Øvelser</h1>
+      <div className="flex justify-between items-center mt-2 mb-4">
+        <h1 className="text-2xl font-bold text-white">Øvelser</h1>
+        <button 
+          onClick={() => setIsCreatingExercise(true)}
+          className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
+        >
+          <Plus size={24} />
+        </button>
+      </div>
+      
       <div className="space-y-3">
         {exercises.map(ex => (
-          <ExerciseCard key={ex.id} exercise={ex} />
+          <ExerciseCard 
+            key={ex.id} 
+            exercise={ex} 
+            onSelect={(exercise) => setViewingExercise(exercise)} 
+          />
         ))}
       </div>
     </div>
@@ -187,7 +212,7 @@ export default function App() {
       onUpdateSession={setActiveSession}
       onFinishSession={handleFinishSession}
       onCancelSession={handleCancelSession}
-      onAddCustomExercise={handleAddCustomExercise}
+      onRequestCreateExercise={() => setIsCreatingExercise(true)}
     />
   );
 
@@ -199,6 +224,23 @@ export default function App() {
         {currentScreen === Screen.EXERCISES && renderExercises()}
         {currentScreen === Screen.ACTIVE_WORKOUT && renderActiveWorkout()}
       </div>
+      
+      {/* Exercise Detail Modal (View/Delete) */}
+      {viewingExercise && (
+        <ExerciseDetailModal 
+          exercise={viewingExercise} 
+          onClose={() => setViewingExercise(null)} 
+          onDelete={handleDeleteExercise}
+        />
+      )}
+      
+      {/* Create Exercise Modal */}
+      {isCreatingExercise && (
+        <ExerciseFormModal
+          onSave={handleSaveNewExercise}
+          onClose={() => setIsCreatingExercise(false)}
+        />
+      )}
       
       <BottomNav 
         currentScreen={currentScreen} 
