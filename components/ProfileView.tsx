@@ -55,6 +55,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
 
     const [selectedGoalInfo, setSelectedGoalInfo] = useState<string | null>(null);
     const [showStrengthModal, setShowStrengthModal] = useState(false);
+    const [showNutritionInfo, setShowNutritionInfo] = useState(false);
 
     const goalInfo: Record<string, { title: string; tips: string[] }> = {
         strength: {
@@ -323,10 +324,18 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
             {/* Health Stats Section */}
             {bmi && profile.age && profile.weight && profile.height && (
                 <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4">
-                    <h2 className="text-lg font-bold text-white flex items-center">
-                        <TrendingUp size={18} className="mr-2 text-primary" />
-                        Helse & Ernæring
-                    </h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-bold text-white flex items-center">
+                            <TrendingUp size={18} className="mr-2 text-primary" />
+                            Helse & Ernæring
+                        </h2>
+                        <button
+                            onClick={() => setShowNutritionInfo(true)}
+                            className="p-2 hover:bg-slate-700 rounded-full transition-colors"
+                        >
+                            <span className="text-lg">ℹ️</span>
+                        </button>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         {/* BMI */}
@@ -344,29 +353,44 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                             </div>
                         </div>
 
-                        {/* Calories (BMR/TDEE) */}
+                        {/* Calories (Goal-based TDEE) */}
                         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
                             <div className="text-[10px] text-muted uppercase tracking-wide mb-1">Daglig kaloribehov</div>
                             <div className="text-xl font-bold text-white">
                                 {(() => {
-                                    // Mifflin-St Jeor Equation
                                     const s = gender === 'male' ? 5 : -161;
                                     const bmr = (10 * profile.weight!) + (6.25 * profile.height!) - (5 * profile.age!) + s;
-                                    // Activity factor (Estimated Moderate 1.375 or Active 1.55)
-                                    // Let's assume Moderate for general active users
                                     const tdee = Math.round(bmr * 1.375);
-                                    return tdee;
+
+                                    // Adjust based on goal
+                                    if (profile.goal === 'weight_loss') {
+                                        return tdee - 400; // Deficit
+                                    } else if (profile.goal === 'muscle') {
+                                        return tdee + 300; // Surplus
+                                    }
+                                    return tdee; // Maintenance
                                 })()}
                                 <span className="text-xs font-normal text-muted ml-1">kcal</span>
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">Vedlikehold</div>
+                            <div className="text-xs text-slate-400 mt-1">
+                                {profile.goal === 'weight_loss' && 'Vektnedgang'}
+                                {profile.goal === 'muscle' && 'Muskelvekst'}
+                                {(!profile.goal || profile.goal === 'strength' || profile.goal === 'endurance' || profile.goal === 'general') && 'Vedlikehold'}
+                            </div>
                         </div>
 
-                        {/* Protein */}
+                        {/* Protein (Goal-based) */}
                         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
                             <div className="text-[10px] text-muted uppercase tracking-wide mb-1">Protein</div>
                             <div className="text-xl font-bold text-white">
-                                {Math.round(profile.weight * 1.8)} - {Math.round(profile.weight * 2.2)}
+                                {(() => {
+                                    if (profile.goal === 'muscle' || profile.goal === 'strength') {
+                                        return `${Math.round(profile.weight * 2.0)} - ${Math.round(profile.weight * 2.4)}`;
+                                    } else if (profile.goal === 'weight_loss') {
+                                        return `${Math.round(profile.weight * 1.8)} - ${Math.round(profile.weight * 2.2)}`;
+                                    }
+                                    return `${Math.round(profile.weight * 1.6)} - ${Math.round(profile.weight * 2.0)}`;
+                                })()}
                                 <span className="text-xs font-normal text-muted ml-1">g</span>
                             </div>
                             <div className="text-xs text-slate-400 mt-1">Anbefalt daglig</div>
@@ -380,6 +404,42 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                                 <span className="text-xs font-normal text-muted ml-1">L</span>
                             </div>
                             <div className="text-xs text-slate-400 mt-1">Minimum daglig</div>
+                        </div>
+
+                        {/* Macros Distribution */}
+                        <div className="col-span-2 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                            <div className="text-[10px] text-muted uppercase tracking-wide mb-2">Makrofordeling (anbefalt)</div>
+                            <div className="flex justify-between text-xs">
+                                {(() => {
+                                    let protein, carbs, fat;
+                                    if (profile.goal === 'muscle' || profile.goal === 'strength') {
+                                        protein = 30; carbs = 45; fat = 25;
+                                    } else if (profile.goal === 'weight_loss') {
+                                        protein = 35; carbs = 35; fat = 30;
+                                    } else if (profile.goal === 'endurance') {
+                                        protein = 20; carbs = 55; fat = 25;
+                                    } else {
+                                        protein = 25; carbs = 45; fat = 30;
+                                    }
+
+                                    return (
+                                        <>
+                                            <div className="text-center">
+                                                <div className="text-lg font-bold text-blue-400">{protein}%</div>
+                                                <div className="text-muted">Protein</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-lg font-bold text-yellow-400">{carbs}%</div>
+                                                <div className="text-muted">Karbs</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-lg font-bold text-orange-400">{fat}%</div>
+                                                <div className="text-muted">Fett</div>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -612,9 +672,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                                                     <div className="relative h-2 bg-slate-700 rounded-full overflow-hidden">
                                                         <div
                                                             className={`absolute top-0 left-0 h-full rounded-full transition-all ${standard.level === 'Avansert' ? 'bg-purple-500' :
-                                                                    standard.level === 'Middels' ? 'bg-emerald-500' :
-                                                                        standard.level === 'Nybegynner+' ? 'bg-blue-500' :
-                                                                            'bg-slate-500'
+                                                                standard.level === 'Middels' ? 'bg-emerald-500' :
+                                                                    standard.level === 'Nybegynner+' ? 'bg-blue-500' :
+                                                                        'bg-slate-500'
                                                                 }`}
                                                             style={{ width: `${standard.percentile}%` }}
                                                         />
@@ -634,6 +694,87 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                                     Lukk
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Nutrition Info Modal */}
+            {showNutritionInfo && (
+                <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-surface rounded-2xl border border-slate-700 w-full max-w-lg shadow-2xl max-h-[80vh] overflow-y-auto">
+                        <div className="p-6 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-surface">
+                            <h2 className="text-2xl font-bold text-white">Ernæringsguide</h2>
+                            <button
+                                onClick={() => setShowNutritionInfo(false)}
+                                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-bold text-white mb-2">📊 BMI (Body Mass Index)</h3>
+                                <p className="text-sm text-slate-300">
+                                    Beregnes som: vekt (kg) / høyde (m)²
+                                </p>
+                                <p className="text-xs text-muted mt-2">
+                                    BMI er en generell indikator, men tar ikke hensyn til muskelmasse.
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-bold text-white mb-2">🔥 Kaloribehov</h3>
+                                <p className="text-sm text-slate-300 mb-2">
+                                    Beregnet med Mifflin-St Jeor formel og moderat aktivitetsnivå.
+                                </p>
+                                <div className="text-xs text-slate-400 space-y-1">
+                                    <p>• <span className="text-emerald-400">Vedlikehold</span>: Oppretthold vekt</p>
+                                    <p>• <span className="text-blue-400">Vektnedgang</span>: -400 kcal (0.5kg/uke)</p>
+                                    <p>• <span className="text-yellow-400">Muskelvekst</span>: +300 kcal</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-bold text-white mb-2">🍗 Protein</h3>
+                                <p className="text-sm text-slate-300 mb-2">
+                                    Tilpasset ditt treningsmål:
+                                </p>
+                                <div className="text-xs text-slate-400 space-y-1">
+                                    <p>• <span className="text-white">Styrke/Muskel</span>: 2.0-2.4g per kg</p>
+                                    <p>• <span className="text-white">Vektnedgang</span>: 1.8-2.2g per kg</p>
+                                    <p>• <span className="text-white">Generelt</span>: 1.6-2.0g per kg</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-bold text-white mb-2">💧 Vann</h3>
+                                <p className="text-sm text-slate-300">
+                                    Minimum 33ml per kg kroppsvekt. Øk ved hard trening eller varmt vær.
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-bold text-white mb-2">⚖️ Makrofordeling</h3>
+                                <p className="text-sm text-slate-300 mb-2">
+                                    Optimalisert for ditt mål:
+                                </p>
+                                <div className="text-xs text-slate-400 space-y-1">
+                                    <p>• <span className="text-white">Styrke/Muskel</span>: 30% protein, 45% karbs, 25% fett</p>
+                                    <p>• <span className="text-white">Vektnedgang</span>: 35% protein, 35% karbs, 30% fett</p>
+                                    <p>• <span className="text-white">Kondisjon</span>: 20% protein, 55% karbs, 25% fett</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-slate-700 bg-slate-800/30">
+                            <button
+                                onClick={() => setShowNutritionInfo(false)}
+                                className="w-full py-3 bg-primary hover:bg-emerald-500 text-white rounded-xl font-medium transition-colors"
+                            >
+                                Lukk
+                            </button>
                         </div>
                     </div>
                 </div>
