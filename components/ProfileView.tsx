@@ -17,8 +17,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
     const [height, setHeight] = useState(profile.height?.toString() || '');
     const [gender, setGender] = useState<UserProfile['gender']>(profile.gender || 'male');
     const [goal, setGoal] = useState(profile.goal || 'general');
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSaved, setShowSaved] = useState(false);
 
     const handleSave = () => {
+        setIsSaving(true);
+
         const updatedProfile: UserProfile = {
             name: name.trim() || 'Kenneth',
             age: age ? parseInt(age) : undefined,
@@ -27,7 +31,18 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
             gender: gender,
             goal: goal as UserProfile['goal']
         };
-        onUpdateProfile(updatedProfile);
+
+        // Simulate save delay for better UX
+        setTimeout(() => {
+            onUpdateProfile(updatedProfile);
+            setIsSaving(false);
+            setShowSaved(true);
+
+            // Hide success message after 2 seconds
+            setTimeout(() => {
+                setShowSaved(false);
+            }, 2000);
+        }, 300);
     };
 
     const goalOptions = [
@@ -372,11 +387,36 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
             {/* Save Button */}
             <button
                 onClick={handleSave}
-                className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-emerald-500 transition-all flex items-center justify-center"
+                disabled={isSaving}
+                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center ${isSaving
+                        ? 'bg-emerald-400 cursor-wait'
+                        : 'bg-primary hover:bg-emerald-500 text-white'
+                    }`}
             >
-                <Save size={20} className="mr-2" />
-                Lagre Profil
+                {isSaving ? (
+                    <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Lagrer...
+                    </>
+                ) : (
+                    <>
+                        <Save size={20} className="mr-2" />
+                        Lagre Profil
+                    </>
+                )}
             </button>
+
+            {/* Success Toast */}
+            {showSaved && (
+                <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center space-x-2 animate-in slide-in-from-bottom-5 z-50">
+                    <div className="h-5 w-5 rounded-full bg-white flex items-center justify-center">
+                        <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span className="font-medium">Profil lagret!</span>
+                </div>
+            )}
         </div>
     );
 };
