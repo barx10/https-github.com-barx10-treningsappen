@@ -197,7 +197,7 @@ export default function App() {
               Anbefalinger for deg
             </h2>
             <div className="space-y-2">
-              {getRecommendations(profile, history).map((rec, idx) => (
+              {getRecommendations(profile, history, exercises).map((rec, idx) => (
                 <div key={idx} className="text-sm text-slate-200 flex items-start">
                   <span className="mr-2 mt-0.5">•</span>
                   <span>{rec}</span>

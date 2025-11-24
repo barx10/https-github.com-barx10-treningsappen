@@ -1,4 +1,4 @@
-import { UserProfile, WorkoutSession, ExerciseDefinition, ExerciseType } from '../types';
+import { UserProfile, WorkoutSession, ExerciseDefinition, ExerciseType, MuscleGroup } from '../types';
 
 /**
  * Calculate estimated calories burned during a workout session
@@ -48,55 +48,111 @@ export const calculateCaloriesBurned = (
  */
 export const getRecommendations = (
     profile: UserProfile,
-    history: WorkoutSession[]
+    history: WorkoutSession[],
+    exercises: ExerciseDefinition[]
 ): string[] => {
     const recommendations: string[] = [];
 
-    // Calculate weekly workout frequency
+    // 1. Get this week's sessions
     const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weeklyWorkouts = history.filter((s) => new Date(s.date) >= weekAgo).length;
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday (0)
+    const monday = new Date(now.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
 
-    // Goal-based recommendations
-    if (profile.goal === 'strength') {
-        if (weeklyWorkouts < 3) {
-            recommendations.push('💪 For optimal styrkeøkning, tren 3-4 ganger i uken');
+    const weekSessions = history.filter((s) => new Date(s.date) >= monday);
+
+    // 2. Analyze what has been trained
+    const muscleCounts: Record<string, number> = {};
+    let cardioSessions = 0;
+    let strengthSessions = 0;
+
+    weekSessions.forEach((session) => {
+        let hasCardio = false;
+        let hasStrength = false;
+
+        session.exercises.forEach((ex) => {
+            const def = exercises.find((e) => e.id === ex.exerciseDefinitionId);
+            if (def) {
+                // Count muscle groups
+                muscleCounts[def.muscleGroup] = (muscleCounts[def.muscleGroup] || 0) + 1;
+
+                if (def.type === ExerciseType.CARDIO) hasCardio = true;
+                if (def.type === ExerciseType.WEIGHTED || def.type === ExerciseType.BODYWEIGHT) hasStrength = true;
+            }
+        });
+
+        if (hasCardio) cardioSessions++;
+        if (hasStrength) strengthSessions++;
+    });
+
+    const totalSessions = weekSessions.length;
+
+    // 3. Goal-based dynamic recommendations
+    if (profile.goal === 'strength' || profile.goal === 'muscle') {
+        // Check for Leg Day
+        if (!muscleCounts[MuscleGroup.LEGS] && totalSessions > 0) {
+            recommendations.push('🦵 Du har ikke trent bein denne uken. På tide med en leg day?');
         }
-        recommendations.push('🎯 Fokuser på progressive overload - øk vekt gradvis');
-        recommendations.push('⏱️ Ta 2-3 minutters pause mellom tunge sett');
-    } else if (profile.goal === 'muscle') {
-        if (weeklyWorkouts < 4) {
-            recommendations.push('🏋️ For muskelbygging, tren 4-5 ganger i uken');
+
+        // Check Push/Pull balance (Simplified: Chest/Shoulders vs Back)
+        const pushCount = (muscleCounts[MuscleGroup.CHEST] || 0) + (muscleCounts[MuscleGroup.SHOULDERS] || 0);
+        const pullCount = muscleCounts[MuscleGroup.BACK] || 0;
+
+        if (pushCount > pullCount + 2) {
+            recommendations.push('⚖️ Du har trent mye press. Husk å trene rygg for balanse.');
         }
-        recommendations.push('🍗 Sørg for å få nok protein (1.6-2.2g per kg kroppsvekt)');
-        recommendations.push('💤 Hvil er viktig - muskler vokser under restitusjon');
+
+        if (totalSessions >= 4 && !muscleCounts[MuscleGroup.CORE]) {
+            recommendations.push('🧱 Husk kjernemuskulaturen! Legg inn litt planke eller mageøvelser.');
+        }
+
+        if (totalSessions < 3) {
+            recommendations.push(`💪 Du har ${totalSessions} økter denne uken. Prøv å nå minst 3 for fremgang.`);
+        } else {
+            recommendations.push('🔥 Godt jobbet med frekvensen denne uken!');
+        }
+
     } else if (profile.goal === 'weight_loss') {
-        recommendations.push('🔥 Kombiner styrke og kondisjon for best fettforbrenning');
-        recommendations.push('🥗 Kaloriunderskudd er nøkkelen til vektnedgang');
-        if (weeklyWorkouts < 4) {
-            recommendations.push('📈 Øk til 4-5 økter i uken for raskere resultater');
+        if (cardioSessions === 0 && totalSessions > 0) {
+            recommendations.push('🏃 Få opp pulsen! En kondisjonsøkt vil hjelpe på forbrenningen.');
         }
+
+        if (strengthSessions === 0 && totalSessions > 0) {
+            recommendations.push('💪 Styrketrening øker hvileforbrenningen. Ikke glem vektene!');
+        }
+
+        if (totalSessions < 4) {
+            recommendations.push('📅 Kontinuitet er nøkkelen. Prøv å være aktiv litt hver dag.');
+        }
+
     } else if (profile.goal === 'endurance') {
-        recommendations.push('🏃 Bygg opp distanse og varighet gradvis');
-        recommendations.push('❤️ Tren i ulike intensitetssoner for best effekt');
-        if (weeklyWorkouts < 3) {
-            recommendations.push('📊 Tren minst 3 ganger i uken for å bygge kondisjon');
+        if (cardioSessions < 2) {
+            recommendations.push('❤️ For kondisjon bør du ha minst 2-3 pulssøkter i uken.');
+        }
+        if (strengthSessions === 0) {
+            recommendations.push('🦵 Sterke bein gir bedre løpsøkonomi. Legg inn litt styrke.');
         }
     }
 
-    // General recommendations
-    if (weeklyWorkouts === 0) {
-        recommendations.push('🚀 Kom i gang! Start med 2-3 økter denne uken');
-    } else if (weeklyWorkouts >= 6) {
-        recommendations.push('⚠️ Husk å ta hvile - kroppen trenger restitusjon');
+    // General fallback if few specific recommendations
+    if (recommendations.length === 0) {
+        if (totalSessions === 0) {
+            recommendations.push('🚀 Ny uke, nye muligheter! Hva skal du trene i dag?');
+            if (profile.goal === 'strength') recommendations.push('Tips: Start uken med de tyngste løftene.');
+            if (profile.goal === 'weight_loss') recommendations.push('Tips: En gåtur er bedre enn ingenting.');
+        } else {
+            recommendations.push('🌟 Du er godt i gang denne uken. Fortsett sånn!');
+            recommendations.push('💧 Husk å drikke nok vann i løpet av dagen.');
+        }
     }
 
-    // Age-based recommendations
-    if (profile.age && profile.age > 40) {
-        recommendations.push('🧘 Inkluder mobilitet og tøying i programmet ditt');
+    // Always add recovery advice if training hard
+    if (totalSessions >= 5) {
+        recommendations.push('💤 Du har trent mye denne uken. Husk at hvile er viktig for fremgang.');
     }
 
-    return recommendations.slice(0, 3); // Return top 3
+    return recommendations.slice(0, 3);
 };
 
 /**
