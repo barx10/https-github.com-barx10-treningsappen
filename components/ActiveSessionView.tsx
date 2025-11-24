@@ -7,6 +7,7 @@ import {
   ExerciseType
 } from '../types';
 import { Plus, Trash2, Check, MoreVertical, Search, X, Clock } from 'lucide-react';
+import RestTimer from './RestTimer';
 
 interface ActiveSessionViewProps {
   session: WorkoutSession | null;
@@ -152,6 +153,11 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
         </button>
       </div>
 
+      {/* Rest Timer */}
+      <div className="px-4 pt-4">
+        <RestTimer />
+      </div>
+
       {/* Exercises List */}
       <div className="p-4 space-y-6">
         {session.exercises.map((workoutExercise, exIndex) => {
@@ -238,8 +244,8 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
                       <button
                         onClick={() => handleUpdateSet(exIndex, setIndex, 'completed', !set.completed)}
                         className={`h-10 w-full rounded-lg flex items-center justify-center transition-all ${set.completed
-                            ? 'bg-secondary text-white shadow-lg shadow-emerald-900/20 scale-105'
-                            : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                          ? 'bg-secondary text-white shadow-lg shadow-emerald-900/20 scale-105'
+                          : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
                           }`}
                       >
                         {set.completed ? <Check size={20} strokeWidth={3} /> : <Check size={18} />}
