@@ -73,5 +73,6 @@ export interface UserProfile {
   age?: number;
   weight?: number; // kg
   height?: number; // cm
+  gender?: 'male' | 'female';
   goal?: 'strength' | 'muscle' | 'weight_loss' | 'endurance' | 'general';
 }

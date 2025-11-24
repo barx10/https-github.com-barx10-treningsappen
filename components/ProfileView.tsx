@@ -15,6 +15,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
     const [age, setAge] = useState(profile.age?.toString() || '');
     const [weight, setWeight] = useState(profile.weight?.toString() || '');
     const [height, setHeight] = useState(profile.height?.toString() || '');
+    const [gender, setGender] = useState<UserProfile['gender']>(profile.gender || 'male');
     const [goal, setGoal] = useState(profile.goal || 'general');
 
     const handleSave = () => {
@@ -23,6 +24,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
             age: age ? parseInt(age) : undefined,
             weight: weight ? parseFloat(weight) : undefined,
             height: height ? parseInt(height) : undefined,
+            gender: gender,
             goal: goal as UserProfile['goal']
         };
         onUpdateProfile(updatedProfile);
@@ -132,6 +134,24 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                         />
                     </div>
                 </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Kjønn</label>
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => setGender('male')}
+                            className={`flex-1 py-2 rounded-lg border border-slate-700 transition-colors ${gender === 'male' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}
+                        >
+                            Mann
+                        </button>
+                        <button
+                            onClick={() => setGender('female')}
+                            className={`flex-1 py-2 rounded-lg border border-slate-700 transition-colors ${gender === 'female' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-800 text-slate-400'}`}
+                        >
+                            Kvinne
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Goal Section */}
@@ -158,23 +178,66 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                 </div>
             </div>
 
-            {/* Stats Section */}
-            {bmi && (
-                <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-3">
+            {/* Health Stats Section */}
+            {bmi && profile.age && profile.weight && profile.height && (
+                <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4">
                     <h2 className="text-lg font-bold text-white flex items-center">
                         <TrendingUp size={18} className="mr-2 text-primary" />
-                        Statistikk
+                        Helse & Ernæring
                     </h2>
-                    <div className="grid grid-cols-1 gap-3">
-                        <div className="bg-slate-800/50 rounded-lg p-4">
-                            <div className="text-xs text-muted uppercase tracking-wide mb-1">BMI</div>
-                            <div className="text-2xl font-bold text-white">{bmi}</div>
-                            <div className="text-xs text-slate-400 mt-1">
+
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* BMI */}
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                            <div className="text-[10px] text-muted uppercase tracking-wide mb-1">BMI</div>
+                            <div className="text-xl font-bold text-white">{bmi}</div>
+                            <div className={`text-xs mt-1 font-medium ${parseFloat(bmi) < 18.5 ? 'text-blue-400' :
+                                parseFloat(bmi) < 25 ? 'text-emerald-400' :
+                                    parseFloat(bmi) < 30 ? 'text-yellow-400' : 'text-red-400'
+                                }`}>
                                 {parseFloat(bmi) < 18.5 && 'Undervekt'}
-                                {parseFloat(bmi) >= 18.5 && parseFloat(bmi) < 25 && 'Normal vekt'}
+                                {parseFloat(bmi) >= 18.5 && parseFloat(bmi) < 25 && 'Normal'}
                                 {parseFloat(bmi) >= 25 && parseFloat(bmi) < 30 && 'Overvekt'}
                                 {parseFloat(bmi) >= 30 && 'Fedme'}
                             </div>
+                        </div>
+
+                        {/* Calories (BMR/TDEE) */}
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                            <div className="text-[10px] text-muted uppercase tracking-wide mb-1">Daglig kaloribehov</div>
+                            <div className="text-xl font-bold text-white">
+                                {(() => {
+                                    // Mifflin-St Jeor Equation
+                                    const s = gender === 'male' ? 5 : -161;
+                                    const bmr = (10 * profile.weight!) + (6.25 * profile.height!) - (5 * profile.age!) + s;
+                                    // Activity factor (Estimated Moderate 1.375 or Active 1.55)
+                                    // Let's assume Moderate for general active users
+                                    const tdee = Math.round(bmr * 1.375);
+                                    return tdee;
+                                })()}
+                                <span className="text-xs font-normal text-muted ml-1">kcal</span>
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">Vedlikehold</div>
+                        </div>
+
+                        {/* Protein */}
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                            <div className="text-[10px] text-muted uppercase tracking-wide mb-1">Protein</div>
+                            <div className="text-xl font-bold text-white">
+                                {Math.round(profile.weight * 1.8)} - {Math.round(profile.weight * 2.2)}
+                                <span className="text-xs font-normal text-muted ml-1">g</span>
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">Anbefalt daglig</div>
+                        </div>
+
+                        {/* Water */}
+                        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                            <div className="text-[10px] text-muted uppercase tracking-wide mb-1">Vann</div>
+                            <div className="text-xl font-bold text-white">
+                                {(profile.weight * 0.033).toFixed(1)}
+                                <span className="text-xs font-normal text-muted ml-1">L</span>
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">Minimum daglig</div>
                         </div>
                     </div>
                 </div>
@@ -207,9 +270,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                                     <div className="relative h-2 bg-slate-700 rounded-full overflow-hidden mb-1">
                                         <div
                                             className={`absolute top-0 left-0 h-full rounded-full ${standard.level === 'Avansert' ? 'bg-purple-500' :
-                                                    standard.level === 'Middels' ? 'bg-emerald-500' :
-                                                        standard.level === 'Nybegynner+' ? 'bg-blue-500' :
-                                                            'bg-slate-500'
+                                                standard.level === 'Middels' ? 'bg-emerald-500' :
+                                                    standard.level === 'Nybegynner+' ? 'bg-blue-500' :
+                                                        'bg-slate-500'
                                                 }`}
                                             style={{ width: `${standard.percentile}%` }}
                                         />
