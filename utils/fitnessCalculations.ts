@@ -53,120 +53,142 @@ export const getRecommendations = (
 ): string[] => {
     const recommendations: string[] = [];
 
-    // 1. Get this week's sessions
+    if (history.length === 0) {
+        return ['🚀 Start uka med en enkel fullkroppsøkt – alt teller!'];
+    }
+
     const now = new Date();
-    const day = now.getDay();
-    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(now.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
 
-    const weekSessions = history.filter((s) => new Date(s.date) >= monday);
+    const sessionsThisWeek = history.filter((session) => new Date(session.date) >= startOfWeek);
+    const sortedHistory = [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const lastSession = sortedHistory[0];
+    const yesterdaySession = sortedHistory.find((session) =>
+        Math.abs(new Date(session.date).getTime() - now.getTime()) <= 24 * 60 * 60 * 1000
+    );
 
-    // Get yesterday's workout
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    const yesterdayEnd = new Date(yesterday);
-    yesterdayEnd.setHours(23, 59, 59, 999);
-
-    const yesterdayWorkout = history.find(s => {
-        const sessionDate = new Date(s.date);
-        return sessionDate >= yesterday && sessionDate <= yesterdayEnd;
-    });
-
-    // 2. Analyze what has been trained
     const muscleCounts: Record<string, number> = {};
-    const musclesYesterday: string[] = [];
     let cardioSessions = 0;
     let strengthSessions = 0;
 
-    weekSessions.forEach((session) => {
-        let hasCardio = false;
-        let hasStrength = false;
-        const isYesterday = session.id === yesterdayWorkout?.id;
-
+    const getSessionMuscles = (session?: WorkoutSession | null) => {
+        if (!session) return [] as MuscleGroup[];
+        const unique = new Set<MuscleGroup>();
         session.exercises.forEach((ex) => {
-            const def = exercises.find((e) => e.id === ex.exerciseDefinitionId);
-            if (def) {
-                muscleCounts[def.muscleGroup] = (muscleCounts[def.muscleGroup] || 0) + 1;
-
-                if (isYesterday && !musclesYesterday.includes(def.muscleGroup)) {
-                    musclesYesterday.push(def.muscleGroup);
-                }
-
-                if (def.type === ExerciseType.CARDIO) hasCardio = true;
-                if (def.type === ExerciseType.WEIGHTED || def.type === ExerciseType.BODYWEIGHT) hasStrength = true;
+            const def = exercises.find((d) => d.id === ex.exerciseDefinitionId);
+            if (def?.muscleGroup) {
+                unique.add(def.muscleGroup);
             }
         });
+        return Array.from(unique);
+    };
 
+    sessionsThisWeek.forEach((session) => {
+        let hasCardio = false;
+        let hasStrength = false;
+        session.exercises.forEach((ex) => {
+            const def = exercises.find((d) => d.id === ex.exerciseDefinitionId);
+            if (!def) return;
+            muscleCounts[def.muscleGroup] = (muscleCounts[def.muscleGroup] || 0) + 1;
+            if (def.type === ExerciseType.CARDIO || def.type === ExerciseType.DURATION) hasCardio = true;
+            if (def.type === ExerciseType.WEIGHTED || def.type === ExerciseType.BODYWEIGHT) hasStrength = true;
+        });
         if (hasCardio) cardioSessions++;
         if (hasStrength) strengthSessions++;
     });
 
-    const totalSessions = weekSessions.length;
+    const formatMuscles = (groups: MuscleGroup[]) => {
+        if (!groups.length) return '';
+        const lower = groups.map((m) => m.toLowerCase());
+        if (lower.length === 1) return lower[0];
+        return `${lower.slice(0, -1).join(', ')} og ${lower[lower.length - 1]}`;
+    };
 
-    // 3. Give specific recommendations based on yesterday and goal
-    if (yesterdayWorkout && musclesYesterday.length > 0) {
-        const muscleStr = musclesYesterday.join(', ').toLowerCase();
+    const sampleExerciseNames = (groups: MuscleGroup[]) => {
+        const names = groups
+            .map((group) => exercises.find((ex) => ex.muscleGroup === group)?.name)
+            .filter(Boolean) as string[];
+        if (!names.length) return '';
+        if (names.length === 1) return names[0];
+        return `${names[0]} eller ${names[1]}`;
+    };
 
-        // Suggest complementary muscles for today
-        const trainedLegs = musclesYesterday.includes(MuscleGroup.LEGS);
-        const trainedChest = musclesYesterday.includes(MuscleGroup.CHEST);
-        const trainedBack = musclesYesterday.includes(MuscleGroup.BACK);
-        const trainedShoulders = musclesYesterday.includes(MuscleGroup.SHOULDERS);
-
-        if (profile.goal === 'strength' || profile.goal === 'muscle') {
-            if (trainedLegs) {
-                recommendations.push(`💪 Bra jobbet med bein i går! I dag kan du fokusere på overkropp - rygg og bryst.`);
-            } else if (trainedChest || trainedShoulders) {
-                recommendations.push(`✅ Flott press-økt i går (${muscleStr})! I dag: tren rygg for balanse.`);
-            } else if (trainedBack) {
-                recommendations.push(`🎯 Sterk ryggøkt i går! I dag kan du trene bryst og skuldre.`);
-            } else {
-                recommendations.push(`🔥 Bra økt i går med ${muscleStr}! Fortsett med komplementære muskelgrupper.`);
-            }
-        } else if (profile.goal === 'weight_loss') {
-            if (strengthSessions > cardioSessions) {
-                recommendations.push(`🏃 Du har trent mye styrke denne uken. Legg inn en kondisjonsøkt i dag!`);
-            } else {
-                recommendations.push(`💪 Bra med kondisjon! Kombiner med styrke for optimal fettforbrenning.`);
-            }
-        } else if (profile.goal === 'endurance') {
-            if (cardioSessions < 2) {
-                recommendations.push(`❤️ Få opp pulsen i dag! En intervall- eller distanseøkt vil bygge kondisjonen.`);
-            } else {
-                recommendations.push(`🦵 Legg inn styrke for beina - det gir bedre løpsøkonomi.`);
-            }
+    const complementaryFocus = (trained: MuscleGroup[]) => {
+        if (trained.some((m) => m === MuscleGroup.LEGS)) {
+            return [MuscleGroup.BACK, MuscleGroup.CHEST];
         }
-    } else {
-        // No workout yesterday - give general guidance
-        if (totalSessions === 0) {
-            recommendations.push('🚀 Ny uke, nye muligheter! Start med en god fullkroppsøkt i dag.');
-            if (profile.goal === 'strength') recommendations.push('💪 Tips: Begynn med de tyngste løftene (knebøy, markløft).');
-        } else {
-            recommendations.push('🌟 Fortsett den gode trenden! Hva med en økt i dag?');
+        if (trained.some((m) => m === MuscleGroup.CHEST || m === MuscleGroup.SHOULDERS)) {
+            return [MuscleGroup.BACK, MuscleGroup.LEGS];
         }
+        if (trained.some((m) => m === MuscleGroup.BACK)) {
+            return [MuscleGroup.CHEST, MuscleGroup.LEGS];
+        }
+        if (trained.some((m) => m === MuscleGroup.CARDIO || m === MuscleGroup.FULL_BODY)) {
+            return [MuscleGroup.LEGS, MuscleGroup.CHEST];
+        }
+        return [MuscleGroup.FULL_BODY, MuscleGroup.CARDIO];
+    };
+
+    if (yesterdaySession) {
+        const muscles = getSessionMuscles(yesterdaySession);
+        if (muscles.length) {
+            const focus = complementaryFocus(muscles);
+            const exerciseExamples = sampleExerciseNames(focus);
+            const focusText = formatMuscles(focus);
+            const exampleText = exerciseExamples ? ` – prøv ${exerciseExamples}` : '';
+            recommendations.push(`🔄 I går trente du ${formatMuscles(muscles)}. I dag passer ${focusText}${exampleText}.`);
+        }
+    } else if (lastSession) {
+        const muscles = getSessionMuscles(lastSession);
+        recommendations.push(`🌟 Forrige økt dekket ${formatMuscles(muscles)}. Planlegg neste økt i morgen for å holde flyten.`);
     }
 
-    // 4. Check for missing muscle groups
-    if (profile.goal === 'strength' || profile.goal === 'muscle') {
-        if (!muscleCounts[MuscleGroup.LEGS] && totalSessions > 1) {
-            recommendations.push('🦵 Du har ikke trent bein denne uken. Legg inn en leg day snart!');
-        }
+    const goalTargets: Record<NonNullable<UserProfile['goal']>, number> = {
+        strength: 3,
+        muscle: 4,
+        weight_loss: 4,
+        endurance: 4,
+        general: 3
+    };
 
-        const pushCount = (muscleCounts[MuscleGroup.CHEST] || 0) + (muscleCounts[MuscleGroup.SHOULDERS] || 0);
-        const pullCount = muscleCounts[MuscleGroup.BACK] || 0;
-
-        if (pushCount > pullCount + 2) {
-            recommendations.push('⚖️ Mye press denne uken. Tren rygg for å unngå ubalanse.');
-        }
+    const goal = profile.goal || 'general';
+    const weeklyTarget = goalTargets[goal];
+    if (sessionsThisWeek.length < weeklyTarget) {
+        recommendations.push(`📅 Du er på ${sessionsThisWeek.length}/${weeklyTarget} økter denne uken. Sett av tid til neste økt allerede nå.`);
     }
 
-    // 5. Recovery advice
-    if (totalSessions >= 5) {
-        recommendations.push('💤 Du har trent mye! Vurder en hviledag eller lett aktivitet.');
-    } else if (totalSessions >= 3 && !muscleCounts[MuscleGroup.CORE]) {
-        recommendations.push('🧱 Husk kjernemuskulaturen - legg inn planke eller mageøvelser.');
+    if ((goal === 'weight_loss' || goal === 'endurance') && cardioSessions < 2) {
+        const example = sampleExerciseNames([MuscleGroup.CARDIO]) || 'en rask gåtur';
+        recommendations.push(`🏃 Få opp pulsen denne uken – legg inn en kondisjonsøkt som ${example}.`);
+    }
+
+    if ((goal === 'strength' || goal === 'muscle') && !muscleCounts[MuscleGroup.LEGS]) {
+        const legExample = sampleExerciseNames([MuscleGroup.LEGS]) || 'knebøy';
+        recommendations.push(`🦵 Ingen beintrening så langt – legg inn ${legExample} for å holde balansen.`);
+    }
+
+    const pushVolume = (muscleCounts[MuscleGroup.CHEST] || 0) + (muscleCounts[MuscleGroup.SHOULDERS] || 0);
+    const pullVolume = muscleCounts[MuscleGroup.BACK] || 0;
+    if (pushVolume >= pullVolume + 2) {
+        const backExample = sampleExerciseNames([MuscleGroup.BACK]) || 'roing';
+        recommendations.push(`⚖️ Mye press denne uken – gi ryggen kjærlighet med ${backExample}.`);
+    }
+
+    const consecutive = sortedHistory.slice(0, 2);
+    if (
+        consecutive.length === 2 &&
+        Math.abs(new Date(consecutive[0].date).getTime() - new Date(consecutive[1].date).getTime()) < 36 * 60 * 60 * 1000 &&
+        sessionsThisWeek.length >= 3
+    ) {
+        recommendations.push('💤 To økter på rad! Vurder en rolig mobilitetsøkt eller hviledag før du kjører på igjen.');
+    }
+
+    if (!recommendations.length) {
+        recommendations.push('✨ Fortsett den gode trenden – planlegg neste økt basert på målet ditt.');
     }
 
     return recommendations.slice(0, 3);
