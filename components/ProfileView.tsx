@@ -54,6 +54,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
     ];
 
     const [selectedGoalInfo, setSelectedGoalInfo] = useState<string | null>(null);
+    const [showStrengthModal, setShowStrengthModal] = useState(false);
 
     const goalInfo: Record<string, { title: string; tips: string[] }> = {
         strength: {
@@ -386,15 +387,23 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
 
             {/* Strength Standards Section */}
             {profile.weight && history && exercises && (
-                <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4">
-                    <h2 className="text-lg font-bold text-white flex items-center">
-                        <Trophy size={18} className="mr-2 text-yellow-500" />
-                        Styrkestandarder
-                    </h2>
+                <div
+                    className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4 cursor-pointer hover:border-slate-600 transition-colors"
+                    onClick={() => setShowStrengthModal(true)}
+                >
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-bold text-white flex items-center">
+                            <Trophy size={18} className="mr-2 text-yellow-500" />
+                            Styrkeoversikt
+                        </h2>
+                        <div className="text-xs text-primary flex items-center">
+                            Se alle øvelser →
+                        </div>
+                    </div>
                     <p className="text-xs text-muted">Basert på din kroppsvekt ({profile.weight}kg)</p>
 
-                    <div className="space-y-4">
-                        {strengthExercises.map(exName => {
+                    <div className="grid grid-cols-2 gap-3">
+                        {strengthExercises.slice(0, 4).map(exName => {
                             const maxWeight = getMaxWeight(exName);
                             if (maxWeight === 0) return null;
 
@@ -403,34 +412,19 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
 
                             return (
                                 <div key={exName} className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm font-medium text-slate-200">{exName}</span>
-                                        <span className="text-sm font-bold text-white">{maxWeight} kg</span>
-                                    </div>
-
-                                    <div className="relative h-2 bg-slate-700 rounded-full overflow-hidden mb-1">
-                                        <div
-                                            className={`absolute top-0 left-0 h-full rounded-full ${standard.level === 'Avansert' ? 'bg-purple-500' :
-                                                standard.level === 'Middels' ? 'bg-emerald-500' :
-                                                    standard.level === 'Nybegynner+' ? 'bg-blue-500' :
-                                                        'bg-slate-500'
-                                                }`}
-                                            style={{ width: `${standard.percentile}%` }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between text-[10px] text-muted uppercase tracking-wider">
-                                        <span>Nivå: <span className="text-slate-300">{standard.level}</span></span>
-                                        <span>{standard.percentile}%</span>
-                                    </div>
+                                    <div className="text-xs text-muted mb-1 truncate">{exName}</div>
+                                    <div className="text-lg font-bold text-white">{maxWeight} kg</div>
+                                    <div className="text-xs text-slate-400">{standard.level}</div>
                                 </div>
                             );
                         })}
-                        {strengthExercises.every(exName => getMaxWeight(exName) === 0) && (
-                            <div className="text-sm text-muted italic text-center py-2">
-                                Logg noen økter med baseøvelser for å se din styrkeprofil!
-                            </div>
-                        )}
                     </div>
+
+                    {strengthExercises.every(exName => getMaxWeight(exName) === 0) && (
+                        <div className="text-sm text-muted italic text-center py-2">
+                            Logg noen økter for å se din styrkeprofil!
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -533,6 +527,113 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                             >
                                 Lukk
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Strength Overview Modal */}
+            {showStrengthModal && (
+                <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm overflow-y-auto">
+                    <div className="min-h-screen p-4 flex items-start justify-center pt-8">
+                        <div className="bg-surface rounded-2xl border border-slate-700 w-full max-w-2xl shadow-2xl">
+                            <div className="p-6 border-b border-slate-700 flex justify-between items-start sticky top-0 bg-surface z-10">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white flex items-center">
+                                        <Trophy size={24} className="mr-2 text-yellow-500" />
+                                        Styrkeoversikt
+                                    </h2>
+                                    <p className="text-sm text-muted mt-1">Alle øvelser med din max-vekt</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowStrengthModal(false)}
+                                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                {(() => {
+                                    // Get all unique exercises from history
+                                    const exerciseMaxes: Record<string, number> = {};
+
+                                    history?.forEach(session => {
+                                        session.exercises.forEach(ex => {
+                                            const def = exercises?.find(e => e.id === ex.exerciseDefinitionId);
+                                            if (def && def.type !== 'Kardio') {
+                                                ex.sets.forEach(set => {
+                                                    if (set.completed && set.weight) {
+                                                        const current = exerciseMaxes[def.name] || 0;
+                                                        if (set.weight > current) {
+                                                            exerciseMaxes[def.name] = set.weight;
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+
+                                    const sortedExercises = Object.entries(exerciseMaxes)
+                                        .sort(([, a], [, b]) => b - a);
+
+                                    if (sortedExercises.length === 0) {
+                                        return (
+                                            <div className="text-center text-muted py-8">
+                                                <Trophy size={48} className="mx-auto mb-4 opacity-30" />
+                                                <p>Ingen styrkeøvelser logget ennå</p>
+                                                <p className="text-sm mt-2">Start å trene for å se fremgang!</p>
+                                            </div>
+                                        );
+                                    }
+
+                                    return sortedExercises.map(([exerciseName, maxWeight]) => {
+                                        const standard = profile.weight
+                                            ? getStrengthStandard(exerciseName, maxWeight, profile.weight)
+                                            : null;
+
+                                        return (
+                                            <div key={exerciseName} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex-1">
+                                                        <h3 className="font-bold text-white">{exerciseName}</h3>
+                                                        {standard && (
+                                                            <div className="text-xs text-muted mt-1">
+                                                                {standard.level} • {standard.percentile}% av din kroppsvekt
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-2xl font-bold text-white">{maxWeight} kg</div>
+                                                        <div className="text-xs text-muted">Max</div>
+                                                    </div>
+                                                </div>
+
+                                                {standard && (
+                                                    <div className="relative h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`absolute top-0 left-0 h-full rounded-full transition-all ${standard.level === 'Avansert' ? 'bg-purple-500' :
+                                                                    standard.level === 'Middels' ? 'bg-emerald-500' :
+                                                                        standard.level === 'Nybegynner+' ? 'bg-blue-500' :
+                                                                            'bg-slate-500'
+                                                                }`}
+                                                            style={{ width: `${standard.percentile}%` }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    });
+                                })()}
+                            </div>
+
+                            <div className="p-6 border-t border-slate-700 bg-slate-800/30">
+                                <button
+                                    onClick={() => setShowStrengthModal(false)}
+                                    className="w-full py-3 bg-primary hover:bg-emerald-500 text-white rounded-xl font-medium transition-colors"
+                                >
+                                    Lukk
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
