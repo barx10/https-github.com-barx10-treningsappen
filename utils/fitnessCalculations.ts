@@ -146,7 +146,11 @@ export const getStrengthStandard = (
 /**
  * Calculate weekly statistics
  */
-export const getWeeklyStats = (history: WorkoutSession[]) => {
+export const getWeeklyStats = (
+    history: WorkoutSession[],
+    exercises: ExerciseDefinition[],
+    userWeight?: number
+) => {
     const now = new Date();
     const day = now.getDay();
     const diff = now.getDate() - day + (day === 0 ? -6 : 1);
@@ -155,17 +159,24 @@ export const getWeeklyStats = (history: WorkoutSession[]) => {
 
     const weekSessions = history.filter((s) => new Date(s.date) >= monday);
 
-    const totalMinutes = weekSessions.reduce((acc, session) => {
+    let totalMinutes = 0;
+    let totalCalories = 0;
+
+    weekSessions.forEach((session) => {
         if (session.endTime) {
             const duration =
                 (new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / 60000;
-            return acc + duration;
+            totalMinutes += duration;
+
+            if (userWeight) {
+                totalCalories += calculateCaloriesBurned(session, exercises, userWeight);
+            }
         }
-        return acc;
-    }, 0);
+    });
 
     return {
         workouts: weekSessions.length,
         totalMinutes: Math.round(totalMinutes),
+        totalCalories: Math.round(totalCalories),
     };
 };

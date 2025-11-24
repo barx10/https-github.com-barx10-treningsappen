@@ -138,45 +138,56 @@ export default function App() {
         </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-surface p-4 rounded-xl border border-slate-700">
-            <div className="flex items-center space-x-2 text-secondary mb-2">
-              <TrendingUp size={18} />
-              <span className="font-bold text-xs uppercase tracking-wide">Denne uken</span>
-            </div>
-            <div className="text-2xl font-bold text-white">
-              {(() => {
-                const now = new Date();
-                const day = now.getDay();
-                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-                const monday = new Date(now.setDate(diff));
-                monday.setHours(0, 0, 0, 0);
-                return history.filter(s => new Date(s.date) >= monday).length;
-              })()}
-              <span className="text-sm text-muted font-normal ml-1">økter</span>
-            </div>
-          </div>
-          <div className="bg-surface p-4 rounded-xl border border-slate-700">
-            <div className="flex items-center space-x-2 text-primary mb-2">
-              <Dumbbell size={18} />
-              <span className="font-bold text-xs uppercase tracking-wide">Totalt løftet</span>
-            </div>
-            <div className="text-2xl font-bold text-white">
-              {(() => {
-                const volume = history.reduce((total, session) => {
-                  return total + session.exercises.reduce((vol, ex) => {
-                    return vol + ex.sets.reduce((sVol, set) => {
-                      if (!set.completed || !set.weight || !set.reps) return sVol;
-                      return sVol + (set.weight * set.reps);
+        {(() => {
+          const weekStats = getWeeklyStats(history, exercises, profile.weight);
+
+          return (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div className="flex items-center space-x-1 text-secondary mb-1">
+                  <TrendingUp size={14} />
+                  <span className="font-bold text-[10px] uppercase tracking-wide">Uken</span>
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {weekStats.workouts}
+                  <span className="text-xs text-muted font-normal ml-1">økter</span>
+                </div>
+              </div>
+
+              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div className="flex items-center space-x-1 text-orange-400 mb-1">
+                  <Flame size={14} />
+                  <span className="font-bold text-[10px] uppercase tracking-wide">Kcal</span>
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {weekStats.totalCalories}
+                  <span className="text-xs text-muted font-normal ml-1"></span>
+                </div>
+              </div>
+
+              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div className="flex items-center space-x-1 text-primary mb-1">
+                  <Dumbbell size={14} />
+                  <span className="font-bold text-[10px] uppercase tracking-wide">Løftet</span>
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {(() => {
+                    const volume = history.reduce((total, session) => {
+                      return total + session.exercises.reduce((vol, ex) => {
+                        return vol + ex.sets.reduce((sVol, set) => {
+                          if (!set.completed || !set.weight || !set.reps) return sVol;
+                          return sVol + (set.weight * set.reps);
+                        }, 0);
+                      }, 0);
                     }, 0);
-                  }, 0);
-                }, 0);
-                return (volume / 1000).toFixed(1);
-              })()}
-              <span className="text-sm text-muted font-normal ml-1">tonn</span>
+                    return (volume / 1000).toFixed(0);
+                  })()}
+                  <span className="text-xs text-muted font-normal ml-1">tonn</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Personalized Recommendations */}
         {profile.goal && (
@@ -198,7 +209,7 @@ export default function App() {
 
         {/* Weekly Summary with Calories */}
         {profile.weight && history.length > 0 && (() => {
-          const weekStats = getWeeklyStats(history);
+          const weekStats = getWeeklyStats(history, exercises, profile.weight);
           return weekStats.workouts > 0 ? (
             <section className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-800/30 rounded-xl p-5">
               <h2 className="text-lg font-bold text-white mb-3 flex items-center">
