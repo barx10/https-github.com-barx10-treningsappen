@@ -51,7 +51,8 @@ const WorkoutHistoryCard: React.FC<WorkoutHistoryCardProps> = ({ session, exerci
         {onDelete && (
           <button
             onClick={handleDelete}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-900/20 rounded-lg text-red-400"
+            className="p-2 bg-slate-800 hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+            aria-label="Slett økt"
           >
             <Trash2 size={16} />
           </button>
