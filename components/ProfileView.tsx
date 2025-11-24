@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, WorkoutSession, ExerciseDefinition } from '../types';
-import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload } from 'lucide-react';
+import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload, X } from 'lucide-react';
 import { getStrengthStandard } from '../utils/fitnessCalculations';
 
 interface ProfileViewProps {
@@ -52,6 +52,75 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
         { value: 'endurance', label: 'Forbedre kondisjonen', emoji: '🏃' },
         { value: 'general', label: 'Generell helse', emoji: '❤️' }
     ];
+
+    const [selectedGoalInfo, setSelectedGoalInfo] = useState<string | null>(null);
+
+    const goalInfo: Record<string, { title: string; tips: string[] }> = {
+        strength: {
+            title: 'Bli sterkere 💪',
+            tips: [
+                '🏋️ Tren 3-4 ganger per uke med fokus på tunge løft',
+                '📊 Progressive overload: Øk vekt gradvis hver uke',
+                '⏱️ Ta 2-3 minutters pause mellom tunge sett',
+                '🎯 Fokuser på baseøvelser: knebøy, markløft, benkpress',
+                '🍗 Spis nok protein: 1.6-2.2g per kg kroppsvekt',
+                '💤 Hvil er viktig - muskler blir sterkere under restitusjon',
+                '📈 Logg fremgang og øk vekt når du klarer 3x8-10 reps'
+            ]
+        },
+        muscle: {
+            title: 'Bygge muskler 🏋️',
+            tips: [
+                '💪 Tren 4-5 ganger per uke med høyt volum',
+                '🎯 8-12 repetisjoner per sett for optimal muskelvekst',
+                '🍖 Høyt proteininntak: 1.8-2.4g per kg kroppsvekt',
+                '🍽️ Spis i kalorioverskudd (200-500 kcal over vedlikehold)',
+                '⏱️ 60-90 sekunders pause mellom sett',
+                '🔄 Tren hver muskelgruppe 2 ganger per uke',
+                '💤 Sov 7-9 timer - muskler vokser mens du hviler',
+                '📊 Variert trening: bytt øvelser hver 4-6 uke'
+            ]
+        },
+        weight_loss: {
+            title: 'Gå ned i vekt 📉',
+            tips: [
+                '🔥 Kombiner styrke og kondisjon 4-5 ganger per uke',
+                '🥗 Spis i kaloriunderskudd (300-500 kcal under vedlikehold)',
+                '🍗 Behold høyt proteininntak for å bevare muskelmasse',
+                '🏃 Legg inn 2-3 kondisjonsøkter per uke',
+                '💪 Styrketrening øker hvileforbrenningen',
+                '💧 Drikk mye vann - minst 2-3 liter daglig',
+                '📊 Vei deg 1 gang per uke, samme tid på dagen',
+                '⏱️ Vær tålmodig - 0.5-1kg per uke er sunt'
+            ]
+        },
+        endurance: {
+            title: 'Forbedre kondisjonen 🏃',
+            tips: [
+                '❤️ Tren kondisjon 3-5 ganger per uke',
+                '📈 Bygg opp distanse og varighet gradvis (10% per uke)',
+                '🎯 Varier intensitet: rolig, moderat og intervaller',
+                '🦵 Legg inn styrketrening 1-2 ganger per uke',
+                '⏱️ Lange rolige økter bygger grunnkondisjonen',
+                '🔥 Intervaller forbedrer VO2 max og hastighet',
+                '💧 Hydrering er viktig - drikk før, under og etter',
+                '🍝 Spis nok karbohydrater for energi'
+            ]
+        },
+        general: {
+            title: 'Generell helse ❤️',
+            tips: [
+                '🏃 Vær aktiv minst 150 min per uke (moderat intensitet)',
+                '💪 Styrketrening 2-3 ganger per uke',
+                '🚶 Daglige turer eller lett aktivitet',
+                '🥗 Variert og balansert kosthold',
+                '💧 Drikk nok vann gjennom dagen',
+                '💤 Prioriter god søvn (7-9 timer)',
+                '🧘 Inkluder mobilitet og tøying',
+                '📊 Konsistens er viktigere enn intensitet'
+            ]
+        }
+    };
 
     // Calculate BMI if height and weight are available
     const bmi = profile.height && profile.weight
@@ -219,20 +288,33 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                     <Target size={18} className="mr-2 text-primary" />
                     Treningsmål
                 </h2>
+                <p className="text-xs text-muted">Trykk på ℹ️ for tips om hvordan nå målet</p>
 
                 <div className="space-y-2">
                     {goalOptions.map((option) => (
-                        <button
-                            key={option.value}
-                            onClick={() => setGoal(option.value)}
-                            className={`w-full p-4 rounded-lg border-2 transition-all text-left flex items-center justify-between ${goal === option.value
-                                ? 'border-primary bg-primary/10 text-white'
-                                : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                                }`}
-                        >
-                            <span className="font-medium">{option.label}</span>
-                            <span className="text-2xl">{option.emoji}</span>
-                        </button>
+                        <div key={option.value} className="relative">
+                            <button
+                                onClick={() => setGoal(option.value)}
+                                className={`w-full p-4 rounded-lg border-2 transition-all text-left flex items-center justify-between ${goal === option.value
+                                    ? 'border-primary bg-primary/10 text-white'
+                                    : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                                    }`}
+                            >
+                                <span className="font-medium">{option.label}</span>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-2xl">{option.emoji}</span>
+                                </div>
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedGoalInfo(option.value);
+                                }}
+                                className="absolute right-14 top-1/2 transform -translate-y-1/2 p-2 hover:bg-slate-700 rounded-full transition-colors"
+                            >
+                                <span className="text-lg">ℹ️</span>
+                            </button>
+                        </div>
                     ))}
                 </div>
             </div>
@@ -389,8 +471,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                 onClick={handleSave}
                 disabled={isSaving}
                 className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center ${isSaving
-                        ? 'bg-emerald-400 cursor-wait'
-                        : 'bg-primary hover:bg-emerald-500 text-white'
+                    ? 'bg-emerald-400 cursor-wait'
+                    : 'bg-primary hover:bg-emerald-500 text-white'
                     }`}
             >
                 {isSaving ? (
@@ -415,6 +497,44 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                         </svg>
                     </div>
                     <span className="font-medium">Profil lagret!</span>
+                </div>
+            )}
+
+            {/* Goal Info Modal */}
+            {selectedGoalInfo && goalInfo[selectedGoalInfo] && (
+                <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-surface rounded-2xl border border-slate-700 w-full max-w-lg shadow-2xl max-h-[80vh] overflow-y-auto">
+                        <div className="p-6 border-b border-slate-700 flex justify-between items-center sticky top-0 bg-surface">
+                            <h2 className="text-2xl font-bold text-white">{goalInfo[selectedGoalInfo].title}</h2>
+                            <button
+                                onClick={() => setSelectedGoalInfo(null)}
+                                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-3">
+                            <p className="text-slate-300 mb-4">
+                                Her er noen tips for å nå ditt mål:
+                            </p>
+                            {goalInfo[selectedGoalInfo].tips.map((tip, idx) => (
+                                <div key={idx} className="flex items-start space-x-3 bg-slate-800/50 p-3 rounded-lg">
+                                    <span className="text-primary font-bold text-sm mt-0.5">{idx + 1}.</span>
+                                    <p className="text-slate-200 text-sm leading-relaxed flex-1">{tip}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="p-6 border-t border-slate-700 bg-slate-800/30">
+                            <button
+                                onClick={() => setSelectedGoalInfo(null)}
+                                className="w-full py-3 bg-primary hover:bg-emerald-500 text-white rounded-xl font-medium transition-colors"
+                            >
+                                Lukk
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
