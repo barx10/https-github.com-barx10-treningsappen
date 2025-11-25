@@ -28,6 +28,7 @@ import ExerciseDetailModal from './components/ExerciseDetailModal';
 import ExerciseFormModal from './components/ExerciseFormModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import ProfileView from './components/ProfileView';
+import InfoView from './components/InfoView';
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
 import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User } from 'lucide-react';
 
@@ -451,6 +452,7 @@ export default function App() {
         {currentScreen === Screen.EXERCISES && renderExercises()}
         {currentScreen === Screen.ACTIVE_WORKOUT && renderActiveWorkout()}
         {currentScreen === Screen.PROFILE && renderProfile()}
+        {currentScreen === Screen.INFO && <InfoView />}
       </div>
 
       {/* Exercise Detail Modal (View/Delete) */}

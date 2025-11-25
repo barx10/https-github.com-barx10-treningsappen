@@ -64,7 +64,8 @@ export enum Screen {
   HISTORY = 'Historikk',
   ACTIVE_WORKOUT = 'Aktiv Økt',
   EXERCISES = 'Øvelser',
-  PROFILE = 'Profil'
+  PROFILE = 'Profil',
+  INFO = 'Info'
 }
 
 // User Profile

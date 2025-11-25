@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, History, Dumbbell, PlayCircle, User } from 'lucide-react';
+import { Home, History, Dumbbell, PlayCircle, User, Info } from 'lucide-react';
 import { Screen } from '../types';
 
 interface BottomNavProps {
@@ -14,6 +14,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate, hasAct
     { screen: Screen.HISTORY, icon: History, label: 'Historikk' },
     { screen: Screen.EXERCISES, icon: Dumbbell, label: 'Øvelser' },
     { screen: Screen.PROFILE, icon: User, label: 'Profil' },
+    { screen: Screen.INFO, icon: Info, label: 'Info' },
   ];
 
   return (
