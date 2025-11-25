@@ -376,9 +376,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                                     const tdee = Math.round(bmr * 1.375);
 
                                     // Adjust based on goal
-                                    if (profile.goal === 'weight_loss') {
+                                    if (goal === 'weight_loss') {
                                         return tdee - 400; // Deficit
-                                    } else if (profile.goal === 'muscle') {
+                                    } else if (goal === 'muscle') {
                                         return tdee + 300; // Surplus
                                     }
                                     return tdee; // Maintenance
@@ -386,9 +386,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                                 <span className="text-xs font-normal text-muted ml-1">kcal</span>
                             </div>
                             <div className="text-xs text-slate-400 mt-1">
-                                {profile.goal === 'weight_loss' && 'Vektnedgang'}
-                                {profile.goal === 'muscle' && 'Muskelvekst'}
-                                {(!profile.goal || profile.goal === 'strength' || profile.goal === 'endurance' || profile.goal === 'general') && 'Vedlikehold'}
+                                {goal === 'weight_loss' && 'Vektnedgang'}
+                                {goal === 'muscle' && 'Muskelvekst'}
+                                {(!goal || goal === 'strength' || goal === 'endurance' || goal === 'general') && 'Vedlikehold'}
                             </div>
                         </div>
 
@@ -397,9 +397,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                             <div className="text-[10px] text-muted uppercase tracking-wide mb-1">Protein</div>
                             <div className="text-xl font-bold text-white">
                                 {(() => {
-                                    if (profile.goal === 'muscle' || profile.goal === 'strength') {
+                                    if (goal === 'muscle' || goal === 'strength') {
                                         return `${Math.round(profile.weight * 2.0)} - ${Math.round(profile.weight * 2.4)}`;
-                                    } else if (profile.goal === 'weight_loss') {
+                                    } else if (goal === 'weight_loss') {
                                         return `${Math.round(profile.weight * 1.8)} - ${Math.round(profile.weight * 2.2)}`;
                                     }
                                     return `${Math.round(profile.weight * 1.6)} - ${Math.round(profile.weight * 2.0)}`;
@@ -425,11 +425,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                             <div className="flex justify-between text-xs">
                                 {(() => {
                                     let protein, carbs, fat;
-                                    if (profile.goal === 'muscle' || profile.goal === 'strength') {
+                                    if (goal === 'muscle' || goal === 'strength') {
                                         protein = 30; carbs = 45; fat = 25;
-                                    } else if (profile.goal === 'weight_loss') {
+                                    } else if (goal === 'weight_loss') {
                                         protein = 35; carbs = 35; fat = 30;
-                                    } else if (profile.goal === 'endurance') {
+                                    } else if (goal === 'endurance') {
                                         protein = 20; carbs = 55; fat = 25;
                                     } else {
                                         protein = 25; carbs = 45; fat = 30;
