@@ -174,7 +174,13 @@ export const getRecommendations = (
         }
     } else if (lastSession) {
         const muscles = getSessionMuscles(lastSession);
-        recommendations.push(`🌟 Forrige økt dekket ${formatMuscles(muscles)}. Planlegg neste økt i morgen for å holde flyten.`);
+        const focus = pickFocusGroups(muscles);
+        if (focus.length > 0) {
+            const exerciseExamples = sampleExerciseNames(focus);
+            const focusText = formatMuscles(focus);
+            const exampleText = exerciseExamples ? ` som ${exerciseExamples}` : '';
+            recommendations.push(`💡 Du trente ${formatMuscles(muscles)} forrige gang. Hva med ${focusText}${exampleText} neste gang?`);
+        }
     }
 
     const goal = profile.goal || 'general';
