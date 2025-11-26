@@ -29,6 +29,7 @@ import ExerciseFormModal from './components/ExerciseFormModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import ProfileView from './components/ProfileView';
 import InfoView from './components/InfoView';
+import AgentView from './components/AgentView';
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
 import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User } from 'lucide-react';
 
@@ -93,6 +94,38 @@ export default function App() {
       setActiveSession(null);
       setCurrentScreen(Screen.HOME);
     }
+  };
+
+  const handleStartGeneratedWorkout = (workout: any) => {
+    const newSession: WorkoutSession = {
+      id: crypto.randomUUID(),
+      name: workout.name,
+      date: new Date().toISOString(),
+      startTime: new Date().toISOString(),
+      status: WorkoutStatus.ACTIVE,
+      exercises: workout.exercises.map((ex: any) => {
+        const exercise = exercises.find(e => e.id === ex.exerciseId);
+        if (!exercise) throw new Error('Exercise not found');
+        
+        const repsValue = parseInt(ex.reps.split('-')[0]) || 10;
+        const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
+        
+        return {
+          id: crypto.randomUUID(),
+          exerciseDefinitionId: exercise.id,
+          sets: Array(ex.sets).fill(null).map(() => ({
+            id: crypto.randomUUID(),
+            weight: 0,
+            reps: isCardio ? 0 : repsValue,
+            durationMinutes: isCardio ? 10 : 0,
+            completed: false,
+          })),
+          notes: ex.notes || `AI anbefaling: ${ex.reps} reps, ${ex.restTime}s hvile`,
+        };
+      }),
+    };
+    setActiveSession(newSession);
+    setCurrentScreen(Screen.ACTIVE_WORKOUT);
   };
 
   const handleSaveExercise = (exercise: ExerciseDefinition) => {
@@ -453,6 +486,14 @@ export default function App() {
         {currentScreen === Screen.ACTIVE_WORKOUT && renderActiveWorkout()}
         {currentScreen === Screen.PROFILE && renderProfile()}
         {currentScreen === Screen.INFO && <InfoView />}
+        {currentScreen === Screen.AGENT && (
+          <AgentView
+            profile={profile}
+            history={history}
+            exercises={exercises}
+            onStartWorkout={handleStartGeneratedWorkout}
+          />
+        )}
       </div>
 
       {/* Exercise Detail Modal (View/Delete) */}
