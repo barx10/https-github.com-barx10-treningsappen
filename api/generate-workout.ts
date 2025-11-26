@@ -4,12 +4,27 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
     const { profile, weekHistory, availableExercises } = req.body;
+    
+    // Validate API key
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not set');
+      return res.status(500).json({ error: 'API key not configured' });
+    }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
@@ -67,6 +82,10 @@ Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
     res.status(200).json(workout);
   } catch (error) {
     console.error('Generate workout error:', error);
-    res.status(500).json({ error: 'Failed to generate workout' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ 
+      error: 'Failed to generate workout',
+      details: errorMessage 
+    });
   }
 }

@@ -70,7 +70,9 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
       });
 
       if (!response.ok) {
-        throw new Error('Kunne ikke generere treningsopplegg');
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        throw new Error(`API feil (${response.status}): ${errorText}`);
       }
 
       const workout: GeneratedWorkout = await response.json();
