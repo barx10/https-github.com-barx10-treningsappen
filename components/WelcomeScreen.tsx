@@ -32,7 +32,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEnter }) => {
                 </h1>
 
                 <p className="text-slate-300 text-lg font-medium mb-12 max-w-[200px] leading-relaxed drop-shadow-md">
-                    Din personlige vei til en sterkere kropp
+                    Din personlige vei til en sunnere kropp
                 </p>
 
                 <div className="flex items-center space-x-2 text-white/80 text-sm uppercase tracking-widest font-bold animate-bounce">
