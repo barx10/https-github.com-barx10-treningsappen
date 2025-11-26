@@ -173,33 +173,38 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
           <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl border border-purple-500/30 p-5 space-y-3">
             <h2 className="text-lg font-bold text-white">{generatedWorkout.name}</h2>
             
-            <div className="flex flex-wrap gap-2">
-              {generatedWorkout.focusAreas.map((area, i) => (
-                <span key={i} className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30">
-                  {area}
-                </span>
-              ))}
-            </div>
+            {generatedWorkout.focusAreas && generatedWorkout.focusAreas.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {generatedWorkout.focusAreas.map((area, i) => (
+                  <span key={i} className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-500/30">
+                    {area}
+                  </span>
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center gap-4 text-sm text-slate-300 pt-2">
               <div className="flex items-center gap-1">
                 <Calendar size={16} />
-                <span>{generatedWorkout.exercises.length} øvelser</span>
+                <span>{generatedWorkout.exercises?.length || 0} øvelser</span>
               </div>
               <div className="flex items-center gap-1">
                 <TrendingUp size={16} />
-                <span>~{generatedWorkout.totalDuration} min</span>
+                <span>~{generatedWorkout.totalDuration || 0} min</span>
               </div>
             </div>
 
-            <p className="text-sm text-slate-300 leading-relaxed pt-2 border-t border-slate-700">
-              {generatedWorkout.reasoning}
-            </p>
+            {generatedWorkout.reasoning && (
+              <p className="text-sm text-slate-300 leading-relaxed pt-2 border-t border-slate-700">
+                {generatedWorkout.reasoning}
+              </p>
+            )}
           </div>
 
           {/* Exercises */}
-          <div className="space-y-3">
-            {generatedWorkout.exercises.map((ex, i) => {
+          {generatedWorkout.exercises && generatedWorkout.exercises.length > 0 && (
+            <div className="space-y-3">
+              {generatedWorkout.exercises.map((ex, i) => {
               const exercise = exercises.find(e => e.id === ex.exerciseId);
               if (!exercise) return null;
 
@@ -231,7 +236,8 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
                 </div>
               );
             })}
-          </div>
+            </div>
+          )}
 
           {/* Start Workout Button */}
           <button
