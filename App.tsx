@@ -44,6 +44,8 @@ export default function App() {
   const [exercises, setExercises] = useState<ExerciseDefinition[]>(loadExercises);
   const [history, setHistory] = useState<WorkoutSession[]>(loadHistory);
   const [profile, setProfile] = useState<UserProfile>(loadProfile);
+  const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
+  const [loadingAiRecommendations, setLoadingAiRecommendations] = useState(false);
 
   // --- Effects for Persistence ---
   useEffect(() => {
@@ -255,6 +257,54 @@ export default function App() {
                 </div>
               ))}
             </div>
+            
+            {/* AI Recommendations Button */}
+            {!aiRecommendations.length && (
+              <button
+                onClick={async () => {
+                  setLoadingAiRecommendations(true);
+                  try {
+                    const response = await fetch('/api/generate-recommendations', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ profile, history, exercises })
+                    });
+                    const data = await response.json();
+                    if (data.recommendations) {
+                      setAiRecommendations(data.recommendations);
+                    }
+                  } catch (error) {
+                    console.error('Failed to get AI recommendations:', error);
+                  } finally {
+                    setLoadingAiRecommendations(false);
+                  }
+                }}
+                disabled={loadingAiRecommendations}
+                className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Lightbulb size={16} />
+                {loadingAiRecommendations ? 'Analyserer...' : '✨ Få dypere AI-analyse'}
+              </button>
+            )}
+            
+            {/* AI Recommendations Display */}
+            {aiRecommendations.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-blue-800/30 space-y-2">
+                <div className="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-2">AI-analyse</div>
+                {aiRecommendations.map((rec, idx) => (
+                  <div key={idx} className="text-sm text-purple-200 flex items-start">
+                    <span className="mr-2 mt-0.5">✨</span>
+                    <span>{rec}</span>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setAiRecommendations([])}
+                  className="text-xs text-slate-400 hover:text-white underline mt-2"
+                >
+                  Skjul AI-analyse
+                </button>
+              </div>
+            )}
           </section>
         )}
 
