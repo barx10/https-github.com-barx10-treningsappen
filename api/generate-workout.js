@@ -48,18 +48,56 @@ ${weekHistory.length > 0 ? weekHistory.map((s) => `- ${new Date(s.date).toLocale
 TILGJENGELIGE ØVELSER:
 ${availableExercises.map((e) => `- ${e.name} (${e.muscleGroup}, ${e.type}) [ID: ${e.id}]`).join('\n')}
 
-INSTRUKSJONER:
+VIKTIGE REGLER FOR TILPASNING TIL MÅL:
+
+${profile.goal === 'strength' ? `
+MÅL: STYRKE
+- Fokus på tunge baseøvelser (knebøy, markløft, benkpress, roing)
+- FÆRRE reps (3-6 reps) og HØYERE vekt
+- Lengre hviletid (2-3 min)
+- 3-5 øvelser totalt (ikke for mange)
+- Prioriter store muskelgrupper
+` : ''}
+
+${profile.goal === 'muscle' ? `
+MÅL: MUSKELVEKST
+- Balanse mellom baseøvelser og isolasjon
+- Moderate reps (8-12 reps)
+- Moderat hviletid (60-90 sek)
+- 5-7 øvelser
+- Inkluder både sammensatte og isolasjonsøvelser
+` : ''}
+
+${profile.goal === 'endurance' ? `
+MÅL: KONDISJON/UTHOLDENHET
+- Høyere reps (12-20 reps)
+- Kortere hviletid (30-60 sek)
+- Inkluder mer cardio-baserte øvelser
+- Flere øvelser i circuit-stil
+- Lettere vekt, høyere volum
+` : ''}
+
+${profile.goal === 'general' ? `
+MÅL: GENERELL HELSE
+- Balansert mix av øvelser
+- Moderate reps (8-12 reps)
+- Moderat hviletid (60-90 sek)
+- 5-6 øvelser
+- Fokus på funksjonelle bevegelser
+` : ''}
+
+GENERELLE INSTRUKSJONER:
 1. Analyser hva brukeren har trent denne uken
-2. Identifiser muskelgrupper som trenger fokus (unngå muskelgrupper trent i går)
-3. Velg 5-7 øvelser fra listen over tilgjengelige øvelser (VIKTIG: Bruk BARE øvelser fra listen, og bruk korrekt ID)
-4. Tilpass intensitet basert på erfaring og mål
-5. Inkluder oppvarming hvis relevant
-6. Gi konkrete anbefalinger for sett, reps og hviletid
-7. Fokuser på baseøvelser (knebøy, markløft, benkpress, roing, etc.) men inkluder noen isolasjonsøvelser
+2. Identifiser muskelgrupper som trenger fokus (UNNGÅ muskelgrupper trent i går eller i går)
+3. Velg øvelser fra listen over tilgjengelige øvelser (VIKTIG: Bruk BARE øvelser fra listen, og bruk korrekt ID)
+4. Tilpass ALLE parametre (sett, reps, hviletid) til brukerens mål
+5. VIKTIG: Ikke lag for hardcore opplegg - tilpass til brukerens nivå
+6. Inkluder alltid oppvarming som første øvelse
+7. Vær konservativ med antall sett - bedre å starte lavt enn for høyt
 
 Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
 {
-  "name": "Navn på økten (f.eks. 'Rygg og Biceps - Styrke')",
+  "name": "Navn på økten (f.eks. 'Bryst og Triceps - Muskelvekst')",
   "exercises": [
     {
       "exerciseId": "id fra tilgjengelige øvelser",
@@ -70,7 +108,7 @@ Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
     }
   ],
   "totalDuration": 60,
-  "focusAreas": ["Rygg", "Biceps"],
+  "focusAreas": ["Bryst", "Triceps"],
   "reasoning": "Kort forklaring på hvorfor dette opplegget passer nå (2-3 setninger)"
 }`;
 
