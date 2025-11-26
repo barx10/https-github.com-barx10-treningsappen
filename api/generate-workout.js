@@ -84,8 +84,19 @@ Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
     });
 
     console.log('Gemini API response received');
-    const workout = JSON.parse(result.text);
-    console.log('Workout parsed successfully');
+    console.log('Raw result.text:', result.text);
+    
+    let workout = JSON.parse(result.text);
+    console.log('Parsed workout type:', Array.isArray(workout) ? 'array' : 'object');
+    console.log('Parsed workout:', workout);
+    
+    // If Gemini returns an array, take the first item
+    if (Array.isArray(workout)) {
+      console.log('Converting array to object');
+      workout = workout[0];
+    }
+    
+    console.log('Final workout:', workout);
     
     res.status(200).json(workout);
   } catch (error) {
