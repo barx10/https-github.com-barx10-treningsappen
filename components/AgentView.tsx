@@ -38,6 +38,12 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
       weekAgo.setDate(weekAgo.getDate() - 7);
       const weekHistory = history.filter(s => new Date(s.date) >= weekAgo);
 
+      // Add timeout to fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      console.log('Sending request to /api/generate-workout...');
+
       const response = await fetch('/api/generate-workout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,7 +73,12 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
             muscleGroup: e.muscleGroup,
           })),
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -76,9 +87,15 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
       }
 
       const workout: GeneratedWorkout = await response.json();
+      console.log('Workout generated:', workout);
       setGeneratedWorkout(workout);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Noe gikk galt');
+      console.error('Error generating workout:', err);
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Forespørselen tok for lang tid. Prøv igjen.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Kunne ikke generere treningsopplegg');
+      }
     } finally {
       setIsGenerating(false);
     }
