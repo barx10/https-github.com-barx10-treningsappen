@@ -10,6 +10,9 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [initialTime, setInitialTime] = useState(90);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const startTimeRef = useRef<number | null>(null);
+    const remainingRef = useRef<number>(90);
 
     useEffect(() => {
         // Create audio element for notification
@@ -17,25 +20,34 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
     }, []);
 
     useEffect(() => {
-        if (!isRunning || timeLeft <= 0) return;
+        if (isRunning) {
+            startTimeRef.current = Date.now();
+            remainingRef.current = timeLeft;
 
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
+            timerRef.current = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
+                const newTimeLeft = Math.max(0, remainingRef.current - elapsed);
+                
+                setTimeLeft(newTimeLeft);
+
+                if (newTimeLeft === 0) {
                     setIsRunning(false);
+                    if (timerRef.current) clearInterval(timerRef.current);
                     // Play sound
                     if (audioRef.current) {
                         audioRef.current.play().catch(() => { });
                     }
                     if (onComplete) onComplete();
-                    return 0;
                 }
-                return prev - 1;
-            });
-        }, 1000);
+            }, 100); // Update more frequently for accuracy
+        } else {
+            if (timerRef.current) clearInterval(timerRef.current);
+        }
 
-        return () => clearInterval(timer);
-    }, [isRunning, timeLeft, onComplete]);
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [isRunning, onComplete]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);

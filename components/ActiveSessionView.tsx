@@ -31,6 +31,8 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   const [isExerciseModalOpen, setExerciseModalOpen] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number | null>(null);
+  const exerciseRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Timer Logic
   useEffect(() => {
@@ -150,6 +152,14 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
       [field]: value
     };
     onUpdateSession({ ...session, exercises: updatedExercises });
+    
+    // Set as current exercise and scroll to it
+    if (field === 'completed' || currentExerciseIndex !== exIndex) {
+      setCurrentExerciseIndex(exIndex);
+      setTimeout(() => {
+        exerciseRefs.current[exIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
   };
 
   const filteredExercises = exercises.filter(e =>
@@ -191,9 +201,16 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
 
           const isCardio = def.type === ExerciseType.CARDIO || def.type === ExerciseType.DURATION;
           const isBodyweight = def.type === ExerciseType.BODYWEIGHT;
+          const isCurrent = currentExerciseIndex === exIndex;
 
           return (
-            <div key={workoutExercise.id} className="bg-surface rounded-xl overflow-hidden border border-slate-700 shadow-sm">
+            <div 
+              key={workoutExercise.id} 
+              ref={(el) => (exerciseRefs.current[exIndex] = el)}
+              className={`bg-surface rounded-xl overflow-hidden border shadow-sm transition-all ${
+                isCurrent ? 'border-primary ring-2 ring-primary/50' : 'border-slate-700'
+              }`}
+            >
               <div className="p-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold text-lg text-blue-100">{def.name}</h3>
