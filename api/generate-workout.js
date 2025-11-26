@@ -1,6 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { GoogleGenAI } from '@google/genai';
 
 export default async function handler(req, res) {
   // Add CORS headers
@@ -25,7 +23,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const prompt = `Du er en personlig treningscoach. Lag et detaljert treningsopplegg basert på følgende:
 
@@ -67,16 +65,15 @@ Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
   "reasoning": "Kort forklaring på hvorfor dette opplegget passer nå (2-3 setninger)"
 }`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    // Extract JSON from response (remove markdown code blocks if present)
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Invalid response from AI');
-    }
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: { parts: [{ text: prompt }] },
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
 
-    const workout = JSON.parse(jsonMatch[0]);
+    const workout = JSON.parse(result.text);
     
     res.status(200).json(workout);
   } catch (error) {
