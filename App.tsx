@@ -101,48 +101,53 @@ export default function App() {
   };
 
   const handleStartGeneratedWorkout = (workout: any) => {
-    // Filter out exercises that don't exist in our database
-    const validExercises = workout.exercises
-      .map((ex: any) => {
-        const exercise = exercises.find(e => e.id === ex.exerciseId);
-        if (!exercise) {
-          console.warn(`Exercise not found: ${ex.exerciseId}`);
-          return null;
-        }
-        
-        const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
-        const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
-        
-        return {
-          id: crypto.randomUUID(),
-          exerciseDefinitionId: exercise.id,
-          sets: Array(ex.sets || 3).fill(null).map(() => ({
+    try {
+      // Filter out exercises that don't exist in our database
+      const validExercises = workout.exercises
+        .map((ex: any) => {
+          const exercise = exercises.find(e => e.id === ex.exerciseId);
+          if (!exercise) {
+            console.warn(`Exercise not found: ${ex.exerciseId}`);
+            return null;
+          }
+          
+          const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
+          const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
+          
+          return {
             id: crypto.randomUUID(),
-            weight: 0,
-            reps: isCardio ? 0 : repsValue,
-            durationMinutes: isCardio ? 10 : 0,
-            completed: false,
-          })),
-          notes: ex.notes || `AI anbefaling: ${ex.reps} reps, ${ex.restTime}s hvile`,
-        };
-      })
-      .filter(Boolean);
+            exerciseDefinitionId: exercise.id,
+            sets: Array(ex.sets || 3).fill(null).map(() => ({
+              id: crypto.randomUUID(),
+              weight: 0,
+              reps: isCardio ? 0 : repsValue,
+              durationMinutes: isCardio ? 10 : 0,
+              completed: false,
+            })),
+            notes: ex.notes || `AI anbefaling: ${ex.reps} reps, ${ex.restTime}s hvile`,
+          };
+        })
+        .filter((ex): ex is WorkoutExercise => ex !== null);
 
-    if (validExercises.length === 0) {
-      alert('Ingen gyldige øvelser funnet i treningsopplegget. Prøv å generere på nytt.');
-      return;
+      if (validExercises.length === 0) {
+        alert('Ingen gyldige øvelser funnet i treningsopplegget. Prøv å generere på nytt.');
+        return;
+      }
+
+      const newSession: WorkoutSession = {
+        id: crypto.randomUUID(),
+        name: workout.name || 'AI-generert økt',
+        date: new Date().toISOString(),
+        startTime: new Date().toISOString(),
+        status: WorkoutStatus.ACTIVE,
+        exercises: validExercises,
+      };
+      setActiveSession(newSession);
+      setCurrentScreen(Screen.ACTIVE_WORKOUT);
+    } catch (error) {
+      console.error('Error starting generated workout:', error);
+      alert('Kunne ikke starte treningsøkten. Prøv igjen.');
     }
-
-    const newSession: WorkoutSession = {
-      id: crypto.randomUUID(),
-      name: workout.name || 'AI-generert økt',
-      date: new Date().toISOString(),
-      startTime: new Date().toISOString(),
-      status: WorkoutStatus.ACTIVE,
-      exercises: validExercises,
-    };
-    setActiveSession(newSession);
-    setCurrentScreen(Screen.ACTIVE_WORKOUT);
   };
 
   const handleSaveExercise = (exercise: ExerciseDefinition) => {
