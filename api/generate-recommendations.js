@@ -17,6 +17,9 @@ export default async function handler(req, res) {
     try {
         const { profile, history, exercises } = req.body;
 
+        // Lag en oversikt over tilgjengelige øvelser
+        const exerciseList = exercises?.map(e => `- ${e.name} (${e.muscleGroup}, ${e.type}) [ID: ${e.id}]`).join('\n') || 'Ingen øvelser registrert';
+
         if (!profile) {
             return res.status(400).json({ error: 'Profile is required' });
         }
@@ -58,6 +61,9 @@ BRUKERENS PROFIL:
 - Vekt: ${profile.weight || 'Ikke oppgitt'} kg
 - Kjønn: ${profile.gender === 'male' ? 'Mann' : profile.gender === 'female' ? 'Kvinne' : 'Ikke oppgitt'}
 
+TILGJENGELIGE ØVELSER (bruk KUN disse i anbefalingene):
+${exerciseList}
+
 TRENINGSAKTIVITET SISTE 7 DAGER:
 - Antall økter: ${weekHistory.length}
 - Totalt antall sett: ${totalVolume}
@@ -82,6 +88,8 @@ Analyser brukerens treningsuke grundig og gi 4-6 konkrete, handlingsrettede anbe
 4. **Handlingsrettet** - si eksakt hva brukeren skal gjøre
 5. **Variert** - dekk ulike aspekter (teknikk, volum, restitusjon, ernæring, periodisering)
 
+VIKTIG: Når du foreslår øvelser, bruk KUN navn og ID fra listen over tilgjengelige øvelser. Hvis brukeren har lagt inn nye øvelser, skal disse også kunne foreslås.
+
 FOKUSOMRÅDER Å VURDERE:
 - Muskelgruppebalanse (er noe neglektert?)
 - Treningsfrekvens vs. mål (for mye/lite?)
@@ -96,13 +104,13 @@ FOKUSOMRÅDER Å VURDERE:
 
 RETURNER JSON:
 {
-  "recommendations": [
-    "📊 **Volum & Intensitet**: Du har trent [antall] økter med [X] sett denne uken. For ditt mål om [mål] anbefaler jeg å...",
-    "💪 **Muskelbalanse**: Jeg ser at du har trent [muskel X] [antall] ganger, men [muskel Y] bare [antall]. Neste uke bør du...",
-    "🍽️ **Ernæring**: Med [mål] som mål og [vekt] kg kroppsvekt, bør du...",
-    "⚡ **Progresjon**: For å fortsette å utvikle deg, prøv å...",
-    "🧘 **Restitusjon**: Basert på [frekvens] økter denne uken..."
-  ]
+    "recommendations": [
+        "📊 **Volum & Intensitet**: Du har trent [antall] økter med [X] sett denne uken. For ditt mål om [mål] anbefaler jeg å...",
+        "💪 **Muskelbalanse**: Jeg ser at du har trent [muskel X] [antall] ganger, men [muskel Y] bare [antall]. Neste uke bør du...",
+        "🍽️ **Ernæring**: Med [mål] som mål og [vekt] kg kroppsvekt, bør du...",
+        "⚡ **Progresjon**: For å fortsette å utvikle deg, prøv å...",
+        "🧘 **Restitusjon**: Basert på [frekvens] økter denne uken..."
+    ]
 }
 
 Vær kreativ, personlig og gi tips som virkelig hjelper brukeren å nå målet sitt!`;
