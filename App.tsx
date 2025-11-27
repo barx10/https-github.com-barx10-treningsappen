@@ -47,30 +47,7 @@ export default function App() {
   const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
   const [loadingAiRecommendations, setLoadingAiRecommendations] = useState(false);
 
-  // Auto-load AI recommendations on mount
-  useEffect(() => {
-    if (profile.goal && aiRecommendations.length === 0 && !loadingAiRecommendations) {
-      const loadAiRecommendations = async () => {
-        setLoadingAiRecommendations(true);
-        try {
-          const response = await fetch('/api/generate-recommendations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profile, history, exercises })
-          });
-          const data = await response.json();
-          if (data.recommendations) {
-            setAiRecommendations(data.recommendations);
-          }
-        } catch (error) {
-          console.error('Failed to get AI recommendations:', error);
-        } finally {
-          setLoadingAiRecommendations(false);
-        }
-      };
-      loadAiRecommendations();
-    }
-  }, [profile.goal]);
+  // Ingen automatisk AI-henting
 
   // --- Effects for Persistence ---
   useEffect(() => {
@@ -280,80 +257,65 @@ export default function App() {
           );
         })()}
 
-        {/* AI Recommendations */}
+        {/* Lokale anbefalinger for treningsuken */}
         {profile.goal && (
           <section className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-800/30 rounded-xl p-5">
             <h2 className="text-lg font-bold text-white mb-3 flex items-center">
               <Lightbulb size={20} className="mr-2 text-yellow-400" />
-              AI-anbefalinger for deg
+              Anbefalinger for deg
             </h2>
-            
-            {loadingAiRecommendations && (
-              <div className="flex items-center justify-center py-6">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                <span className="ml-3 text-slate-300">Analyserer treningen din...</span>
-              </div>
-            )}
-            
-            {!loadingAiRecommendations && aiRecommendations.length === 0 && (
-              <div className="text-sm text-slate-400 py-4 text-center">
-                Kunne ikke laste anbefalinger. Sjekk internettforbindelsen.
-                <button
-                  onClick={async () => {
-                    setLoadingAiRecommendations(true);
-                    try {
-                      const response = await fetch('/api/generate-recommendations', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ profile, history, exercises })
-                      });
-                      const data = await response.json();
-                      if (data.recommendations) {
-                        setAiRecommendations(data.recommendations);
-                      }
-                    } catch (error) {
-                      console.error('Failed to get AI recommendations:', error);
-                    } finally {
-                      setLoadingAiRecommendations(false);
-                    }
-                  }}
-                  className="mt-3 block w-full bg-purple-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-700 transition-all"
-                >
-                  Prøv igjen
-                </button>
-              </div>
-            )}
-            
+            <div className="space-y-2">
+              {/* Her kan du bruke getRecommendations fra fitnessCalculations.ts */}
+              {require('./utils/fitnessCalculations').getRecommendations(profile, history, exercises).map((rec: string, idx: number) => (
+                <div key={idx} className="text-sm text-slate-200 flex items-start">
+                  <span className="mr-2 mt-0.5">•</span>
+                  <span>{rec}</span>
+                </div>
+              ))}
+            </div>
+            {/* AI Recommendations Button */}
+            <button
+              onClick={async () => {
+                setLoadingAiRecommendations(true);
+                try {
+                  const response = await fetch('/api/generate-recommendations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profile, history, exercises })
+                  });
+                  const data = await response.json();
+                  if (data.recommendations) {
+                    setAiRecommendations(data.recommendations);
+                  }
+                } catch (error) {
+                  console.error('Failed to get AI recommendations:', error);
+                } finally {
+                  setLoadingAiRecommendations(false);
+                }
+              }}
+              disabled={loadingAiRecommendations}
+              className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <Lightbulb size={16} />
+              {loadingAiRecommendations ? 'Analyserer...' : '✨ Få dypere AI-analyse'}
+            </button>
+            {/* AI Recommendations Display */}
             {aiRecommendations.length > 0 && (
-              <div className="space-y-3">
+              <div className="mt-4 pt-4 border-t border-purple-500/30 space-y-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                  <Lightbulb size={14} />
+                  AI-analyse
+                </div>
                 {aiRecommendations.map((rec, idx) => (
                   <div key={idx} className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
                     <p className="text-sm text-slate-200 leading-relaxed">{rec}</p>
                   </div>
                 ))}
                 <button
-                  onClick={async () => {
-                    setAiRecommendations([]);
-                    setLoadingAiRecommendations(true);
-                    try {
-                      const response = await fetch('/api/generate-recommendations', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ profile, history, exercises })
-                      });
-                      const data = await response.json();
-                      if (data.recommendations) {
-                        setAiRecommendations(data.recommendations);
-                      }
-                    } catch (error) {
-                      console.error('Failed to get AI recommendations:', error);
-                    } finally {
-                      setLoadingAiRecommendations(false);
-                    }
-                  }}
-                  className="text-xs text-purple-400 hover:text-purple-300 underline"
+                  onClick={() => setAiRecommendations([])}
+                  className="text-xs text-slate-400 hover:text-white underline mt-2"
                 >
-                  🔄 Oppdater anbefalinger
+                  Skjul AI-analyse
                 </button>
               </div>
             )}
