@@ -102,16 +102,23 @@ export default function App() {
   };
 
   const handleStartGeneratedWorkout = (workout: any) => {
+    console.log('=== handleStartGeneratedWorkout called ===');
+    console.log('Workout data:', JSON.stringify(workout, null, 2));
+    console.log('Available exercises:', exercises.length);
+    
     try {
       // Filter out exercises that don't exist in our database
       const validExercises = workout.exercises
         .map((ex: any) => {
+          console.log(`Processing exercise: ${ex.exerciseId}`);
           const exercise = exercises.find(e => e.id === ex.exerciseId);
           if (!exercise) {
             console.warn(`Exercise not found: ${ex.exerciseId}`);
+            console.log('Available exercise IDs:', exercises.map(e => e.id));
             return null;
           }
           
+          console.log(`Found exercise: ${exercise.name}`);
           const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
           const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
           
@@ -130,6 +137,8 @@ export default function App() {
         })
         .filter((ex): ex is WorkoutExercise => ex !== null);
 
+      console.log('Valid exercises found:', validExercises.length);
+
       if (validExercises.length === 0) {
         alert('Ingen gyldige øvelser funnet i treningsopplegget. Prøv å generere på nytt.');
         return;
@@ -143,8 +152,12 @@ export default function App() {
         status: WorkoutStatus.ACTIVE,
         exercises: validExercises,
       };
+      
+      console.log('Creating new session:', newSession);
       setActiveSession(newSession);
+      console.log('Switching to ACTIVE_WORKOUT screen');
       setCurrentScreen(Screen.ACTIVE_WORKOUT);
+      console.log('=== handleStartGeneratedWorkout completed ===');
     } catch (error) {
       console.error('Error starting generated workout:', error);
       alert('Kunne ikke starte treningsøkten. Prøv igjen.');
