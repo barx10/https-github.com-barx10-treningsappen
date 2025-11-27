@@ -45,12 +45,18 @@ export default async function handler(req, res) {
         let cardioSessions = 0;
 
         weekHistory.forEach(session => {
-            session.exercises.forEach(ex => {
-                const muscle = ex.muscleGroup || 'Annet';
-                muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
-                totalVolume += ex.sets?.length || 0;
-                if (ex.type === 'CARDIO') cardioSessions++;
-            });
+                        session.exercises.forEach(ex => {
+                                // Bruk kun gyldige muskelgrupper
+                                const validGroups = [
+                                    'Bryst', 'Rygg', 'Bein', 'Skuldre', 'Armer', 'Kjerne', 'Kondisjon', 'Fullkropp'
+                                ];
+                                const muscle = validGroups.includes(ex.muscleGroup) ? ex.muscleGroup : null;
+                                if (muscle) {
+                                    muscleGroupCounts[muscle] = (muscleGroupCounts[muscle] || 0) + 1;
+                                }
+                                totalVolume += ex.sets?.length || 0;
+                                if (ex.type === 'CARDIO') cardioSessions++;
+                        });
         });
 
         const prompt = `Du er en erfaren personlig trener med fokus på langsiktig, bærekraftig progresjon.
