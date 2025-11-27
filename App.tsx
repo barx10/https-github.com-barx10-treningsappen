@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ExerciseDefinition,
   WorkoutSession,
+  WorkoutExercise,
   Screen,
   WorkoutStatus,
   ExerciseType,
