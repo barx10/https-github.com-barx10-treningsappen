@@ -122,16 +122,14 @@ FOKUSOMRÅDER Å VURDERE:
 
 RETURNER JSON:
 {
-    "recommendations": [
-        "📊 **Volum & Intensitet**: Du har trent [antall] økter med [X] sett denne uken. For ditt mål om [mål] anbefaler jeg å...",
-        "💪 **Muskelbalanse**: Jeg ser at du har trent [muskel X] [antall] ganger, men [muskel Y] bare [antall]. Neste uke bør du...",
-        "🍽️ **Ernæring**: Med [mål] som mål og [vekt] kg kroppsvekt, bør du...",
-        "⚡ **Progresjon**: For å fortsette å utvikle deg, prøv å...",
-        "🧘 **Restitusjon**: Basert på [frekvens] økter denne uken..."
-    ]
-}
-
-Vær kreativ, personlig og gi tips som virkelig hjelper brukeren å nå målet sitt!`;
+  "recommendations": [
+    "📊 Volum & Intensitet: Du har trent [antall] økter med [X] sett denne uken. For ditt mål om [mål] anbefaler jeg å...",
+    "💪 Muskelbalanse: Jeg ser at du har trent [muskel X] [antall] ganger, men [muskel Y] bare [antall]. Neste uke bør du...",
+    "🍽️ Ernæring: Med [mål] som mål og [vekt] kg kroppsvekt, bør du...",
+    "⚡ Progresjon: For å fortsette å utvikle deg, prøv å...",
+    "🧘 Restitusjon: Basert på [frekvens] økter denne uken..."
+  ]
+}Vær kreativ, personlig og gi tips som virkelig hjelper brukeren å nå målet sitt!`;
 
         console.log('Calling Gemini API for recommendations...');
         const result = await ai.models.generateContent({
