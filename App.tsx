@@ -124,23 +124,22 @@ export default function App() {
   };
 
   const handleStartGeneratedWorkout = (workout: any) => {
-    const newSession: WorkoutSession = {
-      id: crypto.randomUUID(),
-      name: workout.name,
-      date: new Date().toISOString(),
-      startTime: new Date().toISOString(),
-      status: WorkoutStatus.ACTIVE,
-      exercises: workout.exercises.map((ex: any) => {
+    // Filter out exercises that don't exist in our database
+    const validExercises = workout.exercises
+      .map((ex: any) => {
         const exercise = exercises.find(e => e.id === ex.exerciseId);
-        if (!exercise) throw new Error('Exercise not found');
+        if (!exercise) {
+          console.warn(`Exercise not found: ${ex.exerciseId}`);
+          return null;
+        }
         
-        const repsValue = parseInt(ex.reps.split('-')[0]) || 10;
+        const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
         const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
         
         return {
           id: crypto.randomUUID(),
           exerciseDefinitionId: exercise.id,
-          sets: Array(ex.sets).fill(null).map(() => ({
+          sets: Array(ex.sets || 3).fill(null).map(() => ({
             id: crypto.randomUUID(),
             weight: 0,
             reps: isCardio ? 0 : repsValue,
@@ -149,7 +148,21 @@ export default function App() {
           })),
           notes: ex.notes || `AI anbefaling: ${ex.reps} reps, ${ex.restTime}s hvile`,
         };
-      }),
+      })
+      .filter(Boolean);
+
+    if (validExercises.length === 0) {
+      alert('Ingen gyldige øvelser funnet i treningsopplegget. Prøv å generere på nytt.');
+      return;
+    }
+
+    const newSession: WorkoutSession = {
+      id: crypto.randomUUID(),
+      name: workout.name || 'AI-generert økt',
+      date: new Date().toISOString(),
+      startTime: new Date().toISOString(),
+      status: WorkoutStatus.ACTIVE,
+      exercises: validExercises,
     };
     setActiveSession(newSession);
     setCurrentScreen(Screen.ACTIVE_WORKOUT);
