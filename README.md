@@ -2,6 +2,21 @@
 
 En moderne Progressive Web App (PWA) for treningstracking med AI-genererte treningsopplegg.
 
+## 📸 Screenshots
+
+<details>
+<summary>Klikk for å se skjermbilder</summary>
+
+| Hjemskjerm | AI Agent | Aktiv Økt |
+|------------|----------|-----------|
+| ![Hjemskjerm](screenshots/home-screen.png) | ![AI Agent](screenshots/ai-agent.png) | ![Aktiv Økt](screenshots/active-workout.png) |
+
+| Historikk | Profil | Øvelsesbibliotek |
+|-----------|--------|------------------|
+| ![Historikk](screenshots/history.png) | ![Profil](screenshots/profile.png) | ![Øvelser](screenshots/exercise-library.png) |
+
+</details>
+
 ## ✨ Funksjoner
 
 - 📊 **Treningslogging** - Logg økter med øvelser, sett, reps og vekt
