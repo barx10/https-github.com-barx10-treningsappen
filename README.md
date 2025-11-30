@@ -300,35 +300,13 @@ Gemini 2.0 Flash er **gratis** opp til 1500 requests/dag (15 requests/minutt).
 └── types.ts                   # TypeScript types
 ```
 
-## 🔒 Personvern og GDPR
+## 🔒 Personvern
 
-### Datalagring
-- **All treningsdata lagres lokalt** i nettleserens localStorage på din enhet
-- **Ingen database**: Vi samler ikke inn, lagrer eller har tilgang til dine personopplysninger
-- **Ingen brukerkontoer**: Ingen registrering, ingen innlogging, ingen e-post
-- **Full kontroll**: Du eier 100% av dataene dine og kan slette alt ved å tømme nettleserens cache
-
-### AI-funksjoner og Google Gemini
-- **Kun under bruk**: AI-anbefalinger sendes bare når DU aktivt trykker på "Få AI-analyse"
-- **Hva sendes**: Treningshistorikk (øvelser, sett, reps), profil (alder, vekt, mål) - ingen navn eller e-post
-- **Gemini API**: Data prosesseres av Google Gemini for å generere anbefalinger
-- **Ikke lagret**: Google lagrer ikke dine data permanent ([les mer](https://ai.google.dev/gemini-api/terms))
-- **Anonymt**: Ingen personidentifiserbar informasjon sendes til AI-tjenesten
-
-### Dine rettigheter
-- **Rett til sletting**: Slett all data ved å tømme localStorage eller avinstallere appen
-- **Rett til innsyn**: All data ligger i nettleserens localStorage (F12 → Application → Local Storage)
-- **Rett til dataportabilitet**: Eksporter/importer treningsdata via Backup-funksjonen i appen
-- **Ingen tracking**: Vi bruker ingen cookies, analytics eller sporing
-
-### For utviklere som deployer appen
-Hvis du deployer din egen versjon av appen:
-- **Du er databehandler**: Du må sørge for GDPR-compliance i din deployment
-- **API-nøkkel**: Hold din Gemini API-nøkkel privat (miljøvariabel, aldri commit til git)
-- **Brukere**: Informer brukerne om at data lagres lokalt og at AI-funksjoner sender data til Google Gemini
-
-### Kontakt
-For spørsmål om personvern, kontakt utvikler på GitHub eller via [Lærerliv](https://www.laererliv.no/)
+- ✅ **All data lagres lokalt** på din enhet (ingen database)
+- ✅ **Ingen brukerkontoer** - ingen registrering, ingen e-post
+- ✅ **AI-funksjoner** sender treningsdata til Google Gemini (kun når du trykker)
+- ✅ **Ingen tracking** - ingen cookies, ingen analytics
+- ✅ **Full kontroll** - eksporter, importer eller slett alt når du vil
 
 📋 **[Les fullstendig personvernerklæring](PRIVACY.md)**
 
