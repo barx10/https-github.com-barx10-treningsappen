@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { UserProfile, WorkoutSession, ExerciseDefinition, BackupData } from '../types';
-import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload, X } from 'lucide-react';
+import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload, X, Calendar } from 'lucide-react';
 import { getStrengthStandard } from '../utils/fitnessCalculations';
+import WeeklySummaryView from './WeeklySummaryView';
 
 interface ProfileViewProps {
     profile: UserProfile;
@@ -58,6 +59,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
     const [selectedGoalInfo, setSelectedGoalInfo] = useState<string | null>(null);
     const [showStrengthModal, setShowStrengthModal] = useState(false);
     const [showNutritionInfo, setShowNutritionInfo] = useState(false);
+    const [showWeeklySummary, setShowWeeklySummary] = useState(false);
 
     const goalInfo: Record<string, { title: string; tips: string[] }> = {
         strength: {
@@ -501,6 +503,20 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                 </div>
             )}
 
+            {/* Weekly Summary Section */}
+            <div className="bg-surface rounded-xl border border-slate-700 p-5">
+                <button
+                    onClick={() => setShowWeeklySummary(true)}
+                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-lg font-semibold flex items-center justify-center transition-all shadow-lg"
+                >
+                    <Calendar size={20} className="mr-2" />
+                    📊 Ukesoppsummering
+                </button>
+                <p className="text-xs text-muted text-center mt-2">
+                    Se fremgang og få motiverende pep talk
+                </p>
+            </div>
+
             {/* Backup & Restore Section */}
             <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4">
                 <h2 className="text-lg font-bold text-white flex items-center">
@@ -790,6 +806,18 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Weekly Summary Modal */}
+            {showWeeklySummary && (
+                <div className="fixed inset-0 bg-black/95 z-50 overflow-y-auto">
+                    <WeeklySummaryView
+                        history={history || []}
+                        profile={profile}
+                        exercises={exercises || []}
+                        onClose={() => setShowWeeklySummary(false)}
+                    />
                 </div>
             )}
         </div>
