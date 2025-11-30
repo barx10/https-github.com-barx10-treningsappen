@@ -28,6 +28,7 @@ import ActiveSessionView from './components/ActiveSessionView';
 import ExerciseDetailModal from './components/ExerciseDetailModal';
 import ExerciseFormModal from './components/ExerciseFormModal';
 import WelcomeScreen from './components/WelcomeScreen';
+import RecoveryInsights from './components/RecoveryInsights';
 import ProfileView from './components/ProfileView';
 import InfoView from './components/InfoView';
 import AgentView from './components/AgentView';
@@ -275,6 +276,9 @@ export default function App() {
             </div>
           );
         })()}
+
+        {/* Recovery Insights */}
+        <RecoveryInsights history={history} exercises={exercises} />
 
         {/* Lokale anbefalinger for treningsuken */}
         {profile.goal && (

@@ -6,8 +6,10 @@ import {
   WorkoutSet,
   ExerciseType
 } from '../types';
-import { Plus, Trash2, Check, Search, X, Clock } from 'lucide-react';
+import { Plus, Trash2, Check, Search, X, Clock, TrendingUp } from 'lucide-react';
 import RestTimer from './RestTimer';
+import PRCelebration from './PRCelebration';
+import { calculatePersonalRecords, checkPRStatus } from '../utils/prTracking';
 
 interface ActiveSessionViewProps {
   session: WorkoutSession | null;
@@ -33,6 +35,8 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number | null>(null);
   const exerciseRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [prCelebration, setPRCelebration] = useState<{ exerciseName: string; prType: 'weight' | 'reps' | 'volume'; value: number } | null>(null);
+  const personalRecords = calculatePersonalRecords(history, exercises);
 
   // Timer Logic
   useEffect(() => {
@@ -147,10 +151,29 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
 
   const handleUpdateSet = (exIndex: number, setIndex: number, field: keyof WorkoutSet, value: number | boolean) => {
     const updatedExercises = [...session.exercises];
-    updatedExercises[exIndex].sets[setIndex] = {
+    const updatedSet = {
       ...updatedExercises[exIndex].sets[setIndex],
       [field]: value
     };
+    updatedExercises[exIndex].sets[setIndex] = updatedSet;
+    
+    // Check for PR when completing a set
+    if (field === 'completed' && value === true) {
+      const exerciseId = updatedExercises[exIndex].exerciseDefinitionId;
+      const prComparisons = checkPRStatus(exerciseId, updatedSet, personalRecords);
+      
+      // Show celebration for new PRs
+      const newPR = prComparisons.find(c => c.isNewPR);
+      if (newPR) {
+        const exerciseName = exercises.find(e => e.id === exerciseId)?.name || '';
+        setPRCelebration({
+          exerciseName,
+          prType: newPR.type,
+          value: newPR.currentValue
+        });
+      }
+    }
+    
     onUpdateSession({ ...session, exercises: updatedExercises });
     
     // Set as current exercise and scroll to it
@@ -240,7 +263,13 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
                   <div className="col-span-3"></div>
                 </div>
 
-                {workoutExercise.sets.map((set, setIndex) => (
+                {workoutExercise.sets.map((set, setIndex) => {
+                  // Check PR status for this set
+                  const prComparisons = set.weight || set.reps ? checkPRStatus(def.id, set, personalRecords) : [];
+                  const nearPR = prComparisons.find(c => c.isNearPR);
+                  const isPR = prComparisons.find(c => c.isNewPR);
+                  
+                  return (
                   <div key={set.id} className={`grid grid-cols-10 gap-2 mb-2 items-center transition-colors rounded-lg p-1 ${set.completed ? 'bg-secondary/10' : ''}`}>
                     <div className="col-span-1 text-center font-mono text-sm text-muted">{setIndex + 1}</div>
 
@@ -304,8 +333,27 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
                         <Trash2 size={14} />
                       </button>
                     </div>
+                    
+                    {/* PR Indicator */}
+                    {(nearPR || isPR) && (
+                      <div className="col-span-10 text-center text-xs mt-1">
+                        {isPR && (
+                          <div className="inline-flex items-center gap-1 bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-500/30">
+                            <TrendingUp size={12} />
+                            <span className="font-semibold">NY PR! 🏆</span>
+                          </div>
+                        )}
+                        {!isPR && nearPR && (
+                          <div className="inline-flex items-center gap-1 bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full border border-blue-500/30">
+                            <TrendingUp size={12} />
+                            <span>På vei mot PR - {Math.round(nearPR.percentageOfPR)}%</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
 
                 <button
                   onClick={() => handleAddSet(exIndex)}
@@ -381,6 +429,16 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
             )}
           </div>
         </div>
+      )}
+      
+      {/* PR Celebration */}
+      {prCelebration && (
+        <PRCelebration
+          exerciseName={prCelebration.exerciseName}
+          prType={prCelebration.prType}
+          value={prCelebration.value}
+          onClose={() => setPRCelebration(null)}
+        />
       )}
     </div>
   );
