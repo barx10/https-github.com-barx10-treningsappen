@@ -21,14 +21,33 @@ interface WeeklyStats {
 }
 
 const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile, exercises, onClose }) => {
-  // Calculate stats for last 7 days
+  // Calculate stats for current week (Monday-Sunday)
   const calculateWeeklyStats = (): WeeklyStats => {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // Get start of week (Monday)
+    const getStartOfWeek = () => {
+      const d = new Date();
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      d.setDate(diff);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    };
+
+    // Parse date string consistently
+    const parseDateString = (dateStr: string): Date => {
+      if (dateStr.length === 10 && dateStr.includes('-')) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+      const date = new Date(dateStr);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+
+    const startOfWeek = getStartOfWeek();
     
     const weekSessions = history.filter(session => {
-      const sessionDate = new Date(session.date);
-      return sessionDate >= sevenDaysAgo && session.status === 'Fullført';
+      const sessionDate = parseDateString(session.date);
+      return sessionDate >= startOfWeek && session.status === 'Fullført';
     });
 
     let totalSets = 0;
