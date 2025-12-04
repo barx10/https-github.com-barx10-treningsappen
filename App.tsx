@@ -53,6 +53,12 @@ export default function App() {
   const [loadingAiRecommendations, setLoadingAiRecommendations] = useState(false);
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [historyDateFilter, setHistoryDateFilter] = useState<'all' | 'week' | 'month' | '3months'>('all');
+  const [historyDisplayLimit, setHistoryDisplayLimit] = useState(20); // Show 20 at a time
+
+  // Reset display limit when filter or search changes
+  useEffect(() => {
+    setHistoryDisplayLimit(20);
+  }, [historySearchQuery, historyDateFilter]);
 
   // Ingen automatisk AI-henting
 
@@ -597,15 +603,25 @@ export default function App() {
 
         {/* History cards */}
         {filteredHistory.length > 0 ? (
-          filteredHistory.map(session => (
-            <WorkoutHistoryCard
-              key={session.id}
-              session={session}
-              exercises={exercises}
-              userWeight={profile.weight}
-              onDelete={handleDeleteHistory}
-            />
-          ))
+          <>
+            {filteredHistory.slice(0, historyDisplayLimit).map(session => (
+              <WorkoutHistoryCard
+                key={session.id}
+                session={session}
+                exercises={exercises}
+                userWeight={profile.weight}
+                onDelete={handleDeleteHistory}
+              />
+            ))}
+            {filteredHistory.length > historyDisplayLimit && (
+              <button
+                onClick={() => setHistoryDisplayLimit(prev => prev + 20)}
+                className="w-full py-3 bg-surface border border-slate-700 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors font-medium"
+              >
+                Vis flere ({filteredHistory.length - historyDisplayLimit} til)
+              </button>
+            )}
+          </>
         ) : (
           <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
             {historySearchQuery ? 'Ingen økter matcher søket' : 'Ingen økter i denne perioden'}
