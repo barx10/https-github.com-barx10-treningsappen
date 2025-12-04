@@ -34,10 +34,32 @@ export default async function handler(req, res) {
         console.log('Initializing Gemini AI...');
         const ai = new GoogleGenAI({ apiKey });
 
-        // Get last 7 days of training
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        const weekHistory = (history || []).filter(s => new Date(s.date) >= weekAgo);
+        // Helper to parse dates consistently
+        const parseDateString = (dateStr) => {
+            if (dateStr.length === 10 && dateStr.includes('-')) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            }
+            const date = new Date(dateStr);
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        };
+
+        // Get start of week (Monday)
+        const getStartOfWeek = () => {
+            const d = new Date();
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            d.setDate(diff);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        };
+
+        // Get this week's completed training (from Monday)
+        const startOfWeek = getStartOfWeek();
+        const weekHistory = (history || []).filter(s => {
+            const sessionDate = parseDateString(s.date);
+            return sessionDate >= startOfWeek && s.status === 'Fullført';
+        });
 
         // Map exercise definitions to history for detailed analysis
         const enrichedHistory = weekHistory.map(session => ({
@@ -89,10 +111,13 @@ TRENINGSAKTIVITET SISTE 7 DAGER:
 - Muskelgrupper trent: ${Object.entries(muscleGroupCounts).map(([m, c]) => `${m} (${c}x)`).join(', ') || 'Ingen'}
 
 DETALJERT HISTORIKK:
-${enrichedHistory.length > 0 ? enrichedHistory.map((s, i) => `
-Økt ${i + 1} - ${new Date(s.date).toLocaleDateString('nb-NO')}:
+${enrichedHistory.length > 0 ? enrichedHistory.map((s, i) => {
+    const sessionDate = parseDateString(s.date);
+    return `
+Økt ${i + 1} - ${sessionDate.toLocaleDateString('nb-NO')}:
 ${s.exercises.map(e => `  • ${e.name} (${e.muscleGroup}): ${e.sets?.length || 0} sett`).join('\n')}
-`).join('\n') : 'Ingen økter denne uken'}
+`;
+}).join('\n') : 'Ingen økter denne uken'}
 
 TOTAL TRENINGSHISTORIKK:
 - Totalt ${history?.length || 0} økter registrert

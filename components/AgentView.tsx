@@ -33,10 +33,30 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
     setError(null);
 
     try {
-      // Get this week's sessions
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekHistory = history.filter(s => new Date(s.date) >= weekAgo);
+      // Get this week's sessions (from Monday)
+      const getStartOfWeek = () => {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        d.setDate(diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+      };
+
+      const parseDateString = (dateStr: string): Date => {
+        if (dateStr.length === 10 && dateStr.includes('-')) {
+          const [year, month, day] = dateStr.split('-').map(Number);
+          return new Date(year, month - 1, day);
+        }
+        const date = new Date(dateStr);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      };
+
+      const startOfWeek = getStartOfWeek();
+      const weekHistory = history.filter(s => {
+        const sessionDate = parseDateString(s.date);
+        return sessionDate >= startOfWeek && s.status === 'Fullført';
+      });
 
       // Add timeout to fetch request
       const controller = new AbortController();

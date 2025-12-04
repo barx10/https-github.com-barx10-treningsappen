@@ -34,6 +34,16 @@ export default async function handler(req, res) {
     console.log('Initializing GoogleGenAI...');
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+    // Helper to parse dates consistently
+    const parseDateString = (dateStr) => {
+      if (dateStr.length === 10 && dateStr.includes('-')) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+      const date = new Date(dateStr);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+
     const prompt = `Du er en personlig treningscoach. Lag et detaljert treningsopplegg basert på følgende:
 
 PROFIL:
@@ -43,7 +53,10 @@ PROFIL:
 - Kjønn: ${profile.gender || 'Ikke oppgitt'}
 
 DENNE UKENS TRENING:
-${weekHistory.length > 0 ? weekHistory.map((s) => `- ${new Date(s.date).toLocaleDateString('nb-NO')}: ${s.exercises.map((e) => `${e.name} (${e.muscleGroup}, ${e.sets} sett)`).join(', ')}`).join('\n') : '- Ingen økter denne uken'}
+${weekHistory.length > 0 ? weekHistory.map((s) => {
+  const sessionDate = parseDateString(s.date);
+  return `- ${sessionDate.toLocaleDateString('nb-NO')}: ${s.exercises.map((e) => `${e.name} (${e.muscleGroup}, ${e.sets} sett)`).join(', ')}`;
+}).join('\n') : '- Ingen økter denne uken'}
 
 TILGJENGELIGE ØVELSER:
 ${availableExercises.map((e) => `- ${e.name} (${e.muscleGroup}, ${e.type}) [ID: ${e.id}]`).join('\n')}
