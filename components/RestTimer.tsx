@@ -22,10 +22,12 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
 
     useEffect(() => {
         if (isRunning) {
-            startTimeRef.current = Date.now();
-            remainingRef.current = timeLeft;
+            if (!startTimeRef.current) {
+                startTimeRef.current = Date.now();
+                remainingRef.current = timeLeft;
+            }
 
-            timerRef.current = setInterval(() => {
+            const updateTimer = () => {
                 const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
                 const newTimeLeft = Math.max(0, remainingRef.current - elapsed);
                 
@@ -33,16 +35,27 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
 
                 if (newTimeLeft === 0) {
                     setIsRunning(false);
-                    if (timerRef.current) clearInterval(timerRef.current);
+                    startTimeRef.current = null;
                     // Play sound
                     if (audioRef.current) {
                         audioRef.current.play().catch(() => { });
                     }
                     if (onComplete) onComplete();
                 }
-            }, 100); // Update more frequently for accuracy
+            };
+
+            // Update immediately
+            updateTimer();
+            
+            // Then update every 100ms
+            timerRef.current = setInterval(updateTimer, 100);
         } else {
-            if (timerRef.current) clearInterval(timerRef.current);
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+            // Reset start time when paused
+            startTimeRef.current = null;
+            remainingRef.current = timeLeft;
         }
 
         return () => {
