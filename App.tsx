@@ -315,7 +315,32 @@ export default function App() {
                 </div>
                 <div className="text-xl font-bold text-white">
                   {(() => {
-                    const volume = history.reduce((total, session) => {
+                    // Get start of week (Monday)
+                    const getStartOfWeek = () => {
+                      const d = new Date();
+                      const day = d.getDay();
+                      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                      d.setDate(diff);
+                      d.setHours(0, 0, 0, 0);
+                      return d;
+                    };
+
+                    const parseDateString = (dateStr: string): Date => {
+                      if (dateStr.length === 10 && dateStr.includes('-')) {
+                        const [year, month, day] = dateStr.split('-').map(Number);
+                        return new Date(year, month - 1, day);
+                      }
+                      const date = new Date(dateStr);
+                      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    };
+
+                    const startOfWeek = getStartOfWeek();
+                    const weekSessions = history.filter(s => {
+                      const sessionDate = parseDateString(s.date);
+                      return sessionDate >= startOfWeek && s.status === 'Fullført';
+                    });
+
+                    const volume = weekSessions.reduce((total, session) => {
                       return total + session.exercises.reduce((vol, ex) => {
                         return vol + ex.sets.reduce((sVol, set) => {
                           if (!set.completed || !set.weight || !set.reps) return sVol;
@@ -323,7 +348,7 @@ export default function App() {
                         }, 0);
                       }, 0);
                     }, 0);
-                    return (volume / 1000).toFixed(0);
+                    return (volume / 1000).toFixed(1);
                   })()}
                   <span className="text-xs text-muted font-normal ml-1">tonn</span>
                 </div>

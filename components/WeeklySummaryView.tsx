@@ -216,7 +216,7 @@ const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile,
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Ukesoppsummering</h1>
-          <p className="text-sm text-gray-600">Siste 7 dager</p>
+          <p className="text-sm text-gray-600">Denne uken (mandag-søndag)</p>
         </div>
         <button
           onClick={onClose}
