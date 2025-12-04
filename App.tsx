@@ -33,8 +33,9 @@ import RecoveryInsights from './components/RecoveryInsights';
 import ProfileView from './components/ProfileView';
 import InfoView from './components/InfoView';
 import AgentView from './components/AgentView';
+import HistoryOverviewChart from './components/HistoryOverviewChart';
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
-import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw } from 'lucide-react';
+import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download } from 'lucide-react';
 
 export default function App() {
   // --- State ---
@@ -50,6 +51,8 @@ export default function App() {
   const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadingAiRecommendations, setLoadingAiRecommendations] = useState(false);
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [historyDateFilter, setHistoryDateFilter] = useState<'all' | 'week' | 'month' | '3months'>('all');
 
   // Ingen automatisk AI-henting
 
@@ -216,6 +219,41 @@ export default function App() {
       setActiveSession(data.activeSession ?? null);
     }
     setCurrentScreen(Screen.HOME);
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Dato', 'Økt', 'Øvelse', 'Muskelgruppe', 'Sett', 'Reps', 'Vekt (kg)', 'Varighet (min)'];
+    const rows = history.flatMap(session => 
+      session.exercises.flatMap(exercise => {
+        const exerciseDef = exercises.find(e => e.id === exercise.exerciseDefinitionId);
+        return exercise.sets.map(set => [
+          new Date(session.date).toLocaleDateString('nb-NO'),
+          session.name,
+          exerciseDef?.name || 'Ukjent',
+          exerciseDef?.muscleGroup || '',
+          '',
+          set.reps || '',
+          set.weight || '',
+          set.durationMinutes || ''
+        ]);
+      })
+    );
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const today = new Date().toISOString().split('T')[0];
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `treningshistorikk-${today}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // --- Views ---
@@ -430,20 +468,127 @@ export default function App() {
     );
   };
 
-  const renderHistory = () => (
-    <div className="p-4 pb-24 space-y-4">
-      <h1 className="text-2xl font-bold text-white mb-4 mt-2">Treningshistorikk</h1>
-      {history.map(session => (
-        <WorkoutHistoryCard
-          key={session.id}
-          session={session}
-          exercises={exercises}
-          userWeight={profile.weight}
-          onDelete={handleDeleteHistory}
-        />
-      ))}
-    </div>
-  );
+  const renderHistory = () => {
+    const parseDateString = (dateStr: string): Date => {
+      if (dateStr.length === 10 && dateStr.includes('-')) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+      const date = new Date(dateStr);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+
+    // Filter by date range
+    let filteredHistory = history;
+    const now = new Date();
+    
+    if (historyDateFilter !== 'all') {
+      const cutoffDate = new Date(now);
+      if (historyDateFilter === 'week') {
+        cutoffDate.setDate(now.getDate() - 7);
+      } else if (historyDateFilter === 'month') {
+        cutoffDate.setMonth(now.getMonth() - 1);
+      } else if (historyDateFilter === '3months') {
+        cutoffDate.setMonth(now.getMonth() - 3);
+      }
+      
+      filteredHistory = history.filter(s => {
+        const sessionDate = parseDateString(s.date);
+        return sessionDate >= cutoffDate;
+      });
+    }
+
+    // Filter by search query
+    if (historySearchQuery.trim()) {
+      const query = historySearchQuery.toLowerCase();
+      filteredHistory = filteredHistory.filter(session => 
+        session.name.toLowerCase().includes(query) ||
+        session.exercises.some(ex => {
+          const def = exercises.find(e => e.id === ex.exerciseDefinitionId);
+          return def?.name.toLowerCase().includes(query) || 
+                 def?.muscleGroup.toLowerCase().includes(query);
+        })
+      );
+    }
+
+    return (
+      <div className="p-4 pb-24 space-y-4">
+        <div className="flex items-center justify-between mt-2 mb-4">
+          <h1 className="text-2xl font-bold text-white">Historikk</h1>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 bg-surface border border-slate-700 text-white px-3 py-2 rounded-lg hover:bg-slate-700 transition-colors text-sm"
+            title="Eksporter til CSV"
+          >
+            <Download size={16} />
+            CSV
+          </button>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Søk etter øvelse, muskelgruppe eller øktnavn..."
+              value={historySearchQuery}
+              onChange={(e) => setHistorySearchQuery(e.target.value)}
+              className="w-full bg-surface border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[
+              { value: 'all', label: 'Alle' },
+              { value: 'week', label: 'Siste uke' },
+              { value: 'month', label: 'Siste måned' },
+              { value: '3months', label: 'Siste 3 mnd' }
+            ].map(filter => (
+              <button
+                key={filter.value}
+                onClick={() => setHistoryDateFilter(filter.value as typeof historyDateFilter)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  historyDateFilter === filter.value
+                    ? 'bg-primary text-white'
+                    : 'bg-surface border border-slate-700 text-slate-300 hover:bg-slate-700'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results count */}
+        <div className="text-sm text-slate-400">
+          Viser {filteredHistory.length} av {history.length} økter
+        </div>
+
+        {/* Overview Chart */}
+        {history.length >= 2 && (
+          <HistoryOverviewChart history={history} exercises={exercises} />
+        )}
+
+        {/* History cards */}
+        {filteredHistory.length > 0 ? (
+          filteredHistory.map(session => (
+            <WorkoutHistoryCard
+              key={session.id}
+              session={session}
+              exercises={exercises}
+              userWeight={profile.weight}
+              onDelete={handleDeleteHistory}
+            />
+          ))
+        ) : (
+          <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
+            {historySearchQuery ? 'Ingen økter matcher søket' : 'Ingen økter i denne perioden'}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderExercises = () => {
     // Group exercises by type
