@@ -291,7 +291,7 @@ export default function App() {
           const weekStats = getWeeklyStats(history, exercises, profile.weight);
 
           return (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
                 <div className="flex items-center space-x-1 text-secondary mb-1">
                   <TrendingUp size={14} />
