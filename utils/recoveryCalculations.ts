@@ -160,7 +160,7 @@ export function findNeglectedMuscleGroups(
 export function getMuscleGroupEmoji(muscleGroup: MuscleGroup): string {
   const emojiMap: Record<MuscleGroup, string> = {
     [MuscleGroup.CHEST]: '💪',
-    [MuscleGroup.BACK]: '🔙',
+    [MuscleGroup.BACK]: '🏋️',
     [MuscleGroup.LEGS]: '🦵',
     [MuscleGroup.SHOULDERS]: '🤷',
     [MuscleGroup.ARMS]: '💪',
