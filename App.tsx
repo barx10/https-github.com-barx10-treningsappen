@@ -315,6 +315,17 @@ export default function App() {
               </div>
 
               <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div className="flex items-center space-x-1 text-emerald-400 mb-1">
+                  <Clock size={14} />
+                  <span className="font-bold text-[10px] uppercase tracking-wide">Min</span>
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {weekStats.totalMinutes}
+                  <span className="text-xs text-muted font-normal ml-1"></span>
+                </div>
+              </div>
+
+              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
                 <div className="flex items-center space-x-1 text-primary mb-1">
                   <Dumbbell size={14} />
                   <span className="font-bold text-[10px] uppercase tracking-wide">Løftet</span>
@@ -432,29 +443,6 @@ export default function App() {
             )}
           </section>
         )}
-
-        {/* Weekly Summary with Calories */}
-        {profile.weight && history.length > 0 && (() => {
-          const weekStats = getWeeklyStats(history, exercises, profile.weight);
-          return weekStats.workouts > 0 ? (
-            <section className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-800/30 rounded-xl p-5">
-              <h2 className="text-lg font-bold text-white mb-3 flex items-center">
-                <Flame size={20} className="mr-2 text-orange-400" />
-                Denne uken
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Økter</div>
-                  <div className="text-2xl font-bold text-white">{weekStats.workouts}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Minutter</div>
-                  <div className="text-2xl font-bold text-white">{weekStats.totalMinutes}</div>
-                </div>
-              </div>
-            </section>
-          ) : null;
-        })()}
 
         {/* Quick Start Section */}
         {!activeSession && (
