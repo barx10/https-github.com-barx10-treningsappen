@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import {
   ExerciseDefinition,
   WorkoutSession,
@@ -30,11 +30,13 @@ import ExerciseDetailModal from './components/ExerciseDetailModal';
 import ExerciseFormModal from './components/ExerciseFormModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import RecoveryInsights from './components/RecoveryInsights';
-import ProfileView from './components/ProfileView';
-import InfoView from './components/InfoView';
-import AgentView from './components/AgentView';
-import HistoryOverviewChart from './components/HistoryOverviewChart';
-import HistoryCalendar from './components/HistoryCalendar';
+
+// Lazy load heavy components
+const ProfileView = lazy(() => import('./components/ProfileView'));
+const InfoView = lazy(() => import('./components/InfoView'));
+const AgentView = lazy(() => import('./components/AgentView'));
+const HistoryOverviewChart = lazy(() => import('./components/HistoryOverviewChart'));
+const HistoryCalendar = lazy(() => import('./components/HistoryCalendar'));
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
 import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock } from 'lucide-react';
 
@@ -565,23 +567,27 @@ export default function App() {
         </div>
 
         {/* Overview Chart */}
-        {filteredHistory.length >= 2 && (
-          <HistoryOverviewChart history={filteredHistory} exercises={exercises} />
-        )}
+        <Suspense fallback={<div className="h-48 bg-surface rounded-xl animate-pulse" />}>
+          {filteredHistory.length >= 2 && (
+            <HistoryOverviewChart history={filteredHistory} exercises={exercises} />
+          )}
+        </Suspense>
 
         {/* Calendar View */}
-        {filteredHistory.length > 0 ? (
-          <HistoryCalendar 
-            history={filteredHistory} 
-            exercises={exercises} 
-            userWeight={profile.weight}
-            onDelete={handleDeleteHistory}
-          />
-        ) : (
-          <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
-            {historySearchQuery ? 'Ingen økter matcher søket' : 'Ingen økter i denne perioden'}
-          </div>
-        )}
+        <Suspense fallback={<div className="h-96 bg-surface rounded-xl animate-pulse" />}>
+          {filteredHistory.length > 0 ? (
+            <HistoryCalendar 
+              history={filteredHistory} 
+              exercises={exercises} 
+              userWeight={profile.weight}
+              onDelete={handleDeleteHistory}
+            />
+          ) : (
+            <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
+              {historySearchQuery ? 'Ingen økter matcher søket' : 'Ingen økter i denne perioden'}
+            </div>
+          )}
+        </Suspense>
       </div>
     );
   };
@@ -708,14 +714,16 @@ export default function App() {
   };
 
   const renderProfile = () => (
-    <ProfileView
-      profile={profile}
-      onUpdateProfile={setProfile}
-      history={history}
-      exercises={exercises}
-      activeSession={activeSession}
-      onImportData={handleImportData}
-    />
+    <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+      <ProfileView
+        profile={profile}
+        onUpdateProfile={setProfile}
+        history={history}
+        exercises={exercises}
+        activeSession={activeSession}
+        onImportData={handleImportData}
+      />
+    </Suspense>
   );
 
   const [showSplash, setShowSplash] = useState(true);
@@ -732,14 +740,20 @@ export default function App() {
         {currentScreen === Screen.EXERCISES && renderExercises()}
         {currentScreen === Screen.ACTIVE_WORKOUT && renderActiveWorkout()}
         {currentScreen === Screen.PROFILE && renderProfile()}
-        {currentScreen === Screen.INFO && <InfoView />}
+        {currentScreen === Screen.INFO && (
+          <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+            <InfoView />
+          </Suspense>
+        )}
         {currentScreen === Screen.AGENT && (
-          <AgentView
-            profile={profile}
-            history={history}
-            exercises={exercises}
-            onStartWorkout={handleStartGeneratedWorkout}
-          />
+          <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+            <AgentView
+              profile={profile}
+              history={history}
+              exercises={exercises}
+              onStartWorkout={handleStartGeneratedWorkout}
+            />
+          </Suspense>
         )}
       </div>
 
