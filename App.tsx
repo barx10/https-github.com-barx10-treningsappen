@@ -564,8 +564,8 @@ export default function App() {
         </div>
 
         {/* Overview Chart */}
-        {history.length >= 2 && (
-          <HistoryOverviewChart history={history} exercises={exercises} />
+        {filteredHistory.length >= 2 && (
+          <HistoryOverviewChart history={filteredHistory} exercises={exercises} />
         )}
 
         {/* History cards */}

@@ -19,9 +19,14 @@ interface HistoryOverviewChartProps {
 
 const HistoryOverviewChart: React.FC<HistoryOverviewChartProps> = ({ history, exercises }) => {
     const getWeekNumber = (date: Date) => {
-        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-        const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        // ISO 8601 week number calculation
+        const target = new Date(date.valueOf());
+        const dayNr = (date.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+        target.setDate(target.getDate() - dayNr + 3); // Nearest Thursday
+        const firstThursday = new Date(target.getFullYear(), 0, 4); // Jan 4th is always in week 1
+        const diff = target.getTime() - firstThursday.getTime();
+        const weekNumber = 1 + Math.round(diff / 604800000); // 604800000 = 7 * 24 * 3600 * 1000
+        return weekNumber;
     };
 
     const weeklyData = useMemo(() => {
