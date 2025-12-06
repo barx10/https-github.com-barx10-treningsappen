@@ -34,6 +34,7 @@ import ProfileView from './components/ProfileView';
 import InfoView from './components/InfoView';
 import AgentView from './components/AgentView';
 import HistoryOverviewChart from './components/HistoryOverviewChart';
+import HistoryCalendar from './components/HistoryCalendar';
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
 import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock } from 'lucide-react';
 
@@ -568,27 +569,14 @@ export default function App() {
           <HistoryOverviewChart history={filteredHistory} exercises={exercises} />
         )}
 
-        {/* History cards */}
+        {/* Calendar View */}
         {filteredHistory.length > 0 ? (
-          <>
-            {filteredHistory.slice(0, historyDisplayLimit).map(session => (
-              <WorkoutHistoryCard
-                key={session.id}
-                session={session}
-                exercises={exercises}
-                userWeight={profile.weight}
-                onDelete={handleDeleteHistory}
-              />
-            ))}
-            {filteredHistory.length > historyDisplayLimit && (
-              <button
-                onClick={() => setHistoryDisplayLimit(prev => prev + 5)}
-                className="w-full py-3 bg-surface border border-slate-700 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition-colors font-medium"
-              >
-                Vis flere ({filteredHistory.length - historyDisplayLimit} til)
-              </button>
-            )}
-          </>
+          <HistoryCalendar 
+            history={filteredHistory} 
+            exercises={exercises} 
+            userWeight={profile.weight}
+            onDelete={handleDeleteHistory}
+          />
         ) : (
           <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
             {historySearchQuery ? 'Ingen økter matcher søket' : 'Ingen økter i denne perioden'}
