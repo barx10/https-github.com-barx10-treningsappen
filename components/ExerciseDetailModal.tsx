@@ -39,27 +39,31 @@ const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({ exercise, his
         </button>
 
         {/* Image Area */}
-        <div className="aspect-video bg-slate-800 flex items-center justify-center overflow-hidden relative group shrink-0">
-          {exercise.imageUrl ? (
-            <img
-              src={exercise.imageUrl}
-              alt={exercise.name}
-              loading="lazy"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex flex-col items-center text-muted">
-              <Activity size={48} className="mb-2 opacity-50" />
-              <span className="text-xs">Ingen illustrasjon</span>
+        <div className="p-4 pb-0">
+          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+            <div className="aspect-square bg-slate-900 rounded-lg flex items-center justify-center overflow-hidden">
+              {exercise.imageUrl ? (
+                <img
+                  src={exercise.imageUrl}
+                  alt={exercise.name}
+                  className="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <div className="flex flex-col items-center text-muted">
+                  <Activity size={48} className="mb-2 opacity-50" />
+                  <span className="text-xs">Ingen illustrasjon</span>
+                </div>
+              )}
             </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent opacity-80"></div>
-          <div className="absolute bottom-0 left-0 p-4">
-            <div className="inline-block px-2 py-1 rounded bg-primary/20 border border-primary/30 text-primary text-xs font-bold mb-1">
-              {exercise.muscleGroup}
-            </div>
-            <h2 className="text-xl font-bold text-white shadow-black drop-shadow-md">{exercise.name}</h2>
           </div>
+        </div>
+        
+        {/* Title Area */}
+        <div className="px-4 pt-3">
+          <div className="inline-block px-2 py-1 rounded-lg bg-primary/20 border border-primary/30 text-primary text-xs font-bold mb-1">
+            {exercise.muscleGroup}
+          </div>
+          <h2 className="text-xl font-bold text-white">{exercise.name}</h2>
         </div>
 
         {/* Content Area */}
