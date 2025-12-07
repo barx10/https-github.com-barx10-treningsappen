@@ -136,7 +136,7 @@ const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile,
       return {
         emoji: '🌟',
         title: 'Flott start!',
-        message: `${totalWorkouts} ${totalWorkouts === 1 ? 'økt' : 'økter'} fullført - det som betyr mest er at du tok steget! ${totalSets} sett er ${totalSets} ganger du valgte fremgang. Å komme i gang er ofte det tøffeste. Du har brutt inertien. Nå handler det bare om å holde momentumet! Keep going! ⭐`
+        message: `${totalWorkouts} ${totalWorkouts === 1 ? 'økt' : 'økter'} fullført - det som betyr mest er at du tok steget! ${totalSets} sett er ${totalSets} ganger du valgte fremgang. Å komme i gang er ofte det tøffeste, men du gjorde det! Nå handler det bare om å fortsette. Keep going! ⭐`
       };
     }
 
