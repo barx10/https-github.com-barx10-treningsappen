@@ -102,3 +102,118 @@ export const saveActiveSession = (session: WorkoutSession | null) => {
         console.error('Failed to save active session', error);
     }
 };
+
+// AI Workout Cache
+interface CachedWorkout {
+    workout: any;
+    timestamp: number;
+    weekHistoryHash: string;
+}
+
+const hashWeekHistory = (history: any[]): string => {
+    return JSON.stringify(history.map(s => ({ date: s.date, exercises: s.exercises.length })));
+};
+
+export const loadCachedWorkout = (currentWeekHistory: any[]): any | null => {
+    if (!hasStorage()) return null;
+    try {
+        const stored = window.localStorage.getItem(STORAGE_KEYS.AI_WORKOUT_CACHE);
+        if (!stored) return null;
+        
+        const cached: CachedWorkout = JSON.parse(stored);
+        const now = new Date();
+        const cachedDate = new Date(cached.timestamp);
+        
+        // Check if cache is from today
+        const isToday = cachedDate.toDateString() === now.toDateString();
+        
+        // Check if week history has changed
+        const currentHash = hashWeekHistory(currentWeekHistory);
+        const historyUnchanged = cached.weekHistoryHash === currentHash;
+        
+        if (isToday && historyUnchanged) {
+            return cached.workout;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Failed to load cached workout', error);
+        return null;
+    }
+};
+
+export const saveCachedWorkout = (workout: any, weekHistory: any[]) => {
+    if (!hasStorage()) return;
+    try {
+        const cached: CachedWorkout = {
+            workout,
+            timestamp: Date.now(),
+            weekHistoryHash: hashWeekHistory(weekHistory)
+        };
+        window.localStorage.setItem(STORAGE_KEYS.AI_WORKOUT_CACHE, JSON.stringify(cached));
+    } catch (error) {
+        console.error('Failed to save cached workout', error);
+    }
+};
+
+export const clearCachedWorkout = () => {
+    if (!hasStorage()) return;
+    try {
+        window.localStorage.removeItem(STORAGE_KEYS.AI_WORKOUT_CACHE);
+    } catch (error) {
+        console.error('Failed to clear cached workout', error);
+    }
+};
+
+// AI Recommendations Cache
+interface CachedRecommendations {
+    recommendations: string[];
+    timestamp: number;
+}
+
+export const loadCachedRecommendations = (): string[] | null => {
+    if (!hasStorage()) return null;
+    try {
+        const stored = window.localStorage.getItem(STORAGE_KEYS.AI_RECOMMENDATIONS_CACHE);
+        if (!stored) return null;
+        
+        const cached: CachedRecommendations = JSON.parse(stored);
+        const now = new Date();
+        const cachedDate = new Date(cached.timestamp);
+        
+        // Check if cache is from today
+        const isToday = cachedDate.toDateString() === now.toDateString();
+        
+        if (isToday) {
+            return cached.recommendations;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Failed to load cached recommendations', error);
+        return null;
+    }
+};
+
+export const saveCachedRecommendations = (recommendations: string[]) => {
+    if (!hasStorage()) return;
+    try {
+        const cached: CachedRecommendations = {
+            recommendations,
+            timestamp: Date.now()
+        };
+        window.localStorage.setItem(STORAGE_KEYS.AI_RECOMMENDATIONS_CACHE, JSON.stringify(cached));
+    } catch (error) {
+        console.error('Failed to save cached recommendations', error);
+    }
+};
+
+export const clearCachedRecommendations = () => {
+    if (!hasStorage()) return;
+    try {
+        window.localStorage.removeItem(STORAGE_KEYS.AI_RECOMMENDATIONS_CACHE);
+    } catch (error) {
+        console.error('Failed to clear cached recommendations', error);
+    }
+};
+

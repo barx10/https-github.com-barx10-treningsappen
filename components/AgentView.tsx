@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Zap, TrendingUp, Calendar, AlertCircle, Loader2, RefreshCw, X } from 'lucide-react';
 import type { WorkoutSession, ExerciseDefinition, UserProfile } from '../types';
+import { loadCachedWorkout, saveCachedWorkout, clearCachedWorkout } from '../utils/storage';
 
 interface AgentViewProps {
   profile: UserProfile;
@@ -29,8 +30,9 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
   const [error, setError] = useState<string | null>(null);
   const [swappingExerciseIndex, setSwappingExerciseIndex] = useState<number | null>(null);
   const [alternativeExercises, setAlternativeExercises] = useState<ExerciseDefinition[]>([]);
+  const [isCached, setIsCached] = useState(false);
 
-  const generateWorkout = async () => {
+  const generateWorkout = async (forceRefresh = false) => {
     setIsGenerating(true);
     setError(null);
 
@@ -59,6 +61,20 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
         const sessionDate = parseDateString(s.date);
         return sessionDate >= startOfWeek && s.status === 'Fullført';
       });
+
+      // Check cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cachedWorkout = loadCachedWorkout(weekHistory);
+        if (cachedWorkout) {
+          console.log('Using cached workout');
+          setGeneratedWorkout(cachedWorkout);
+          setIsCached(true);
+          setIsGenerating(false);
+          return;
+        }
+      }
+
+      setIsCached(false);
 
       // Add timeout to fetch request
       const controller = new AbortController();
@@ -110,7 +126,12 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
 
       const workout: GeneratedWorkout = await response.json();
       console.log('Workout generated:', workout);
+      
+      // Save to cache
+      saveCachedWorkout(workout, weekHistory);
+      
       setGeneratedWorkout(workout);
+      setIsCached(false);
     } catch (err) {
       console.error('Error generating workout:', err);
       if (err instanceof Error && err.name === 'AbortError') {
@@ -219,7 +240,7 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
 
       {/* Generate Button */}
       <button
-        onClick={generateWorkout}
+        onClick={() => generateWorkout(false)}
         disabled={isGenerating}
         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl 
                    font-semibold flex items-center justify-center gap-2 hover:from-purple-700 
@@ -253,6 +274,14 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
       {/* Generated Workout */}
       {generatedWorkout && (
         <div className="space-y-4">
+          {/* Cache Badge */}
+          {isCached && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <Calendar size={14} className="text-blue-400" />
+              <span className="text-xs text-blue-300">Lagret opplegg fra i dag</span>
+            </div>
+          )}
+          
           {/* Workout Header */}
           <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl border border-purple-500/30 p-5 space-y-3">
             <h2 className="text-lg font-bold text-white">{generatedWorkout.name}</h2>
@@ -332,16 +361,28 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
             </div>
           )}
 
-          {/* Start Workout Button */}
-          <button
-            onClick={startGeneratedWorkout}
-            className="w-full bg-secondary text-white py-4 rounded-xl font-semibold 
-                       hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 
-                       shadow-lg shadow-emerald-900/20"
-          >
-            <Zap size={20} />
-            Start denne økten
-          </button>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={startGeneratedWorkout}
+              className="flex-1 bg-secondary text-white py-4 rounded-xl font-semibold 
+                         hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 
+                         shadow-lg shadow-emerald-900/20"
+            >
+              <Zap size={20} />
+              Start denne økten
+            </button>
+            <button
+              onClick={() => generateWorkout(true)}
+              disabled={isGenerating}
+              className="px-6 py-4 bg-slate-700 text-white rounded-xl font-semibold 
+                         hover:bg-slate-600 transition-colors flex items-center justify-center gap-2
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Generer nytt opplegg"
+            >
+              <RefreshCw size={20} />
+            </button>
+          </div>
         </div>
       )}
 

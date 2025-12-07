@@ -18,7 +18,9 @@ import {
   loadHistory,
   saveHistory,
   loadActiveSession,
-  saveActiveSession
+  saveActiveSession,
+  loadCachedRecommendations,
+  saveCachedRecommendations
 } from './utils/storage';
 import { loadProfile, saveProfile } from './utils/profileStorage';
 import { getTodayDateString } from './utils/dateUtils';
@@ -400,6 +402,16 @@ export default function App() {
               onClick={async () => {
                 setLoadingAiRecommendations(true);
                 try {
+                  // Check cache first
+                  const cachedRecs = loadCachedRecommendations();
+                  if (cachedRecs) {
+                    console.log('Using cached recommendations');
+                    setAiRecommendations(cachedRecs);
+                    setLoadingAiRecommendations(false);
+                    return;
+                  }
+
+                  // No cache, make API call
                   const response = await fetch('/api/generate-recommendations', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -408,6 +420,7 @@ export default function App() {
                   const data = await response.json();
                   if (data.recommendations) {
                     setAiRecommendations(data.recommendations);
+                    saveCachedRecommendations(data.recommendations);
                   }
                 } catch (error) {
                   console.error('Failed to get AI recommendations:', error);
