@@ -5,7 +5,7 @@ import { STORAGE_KEYS } from './storageKeys';
 const hasStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
 /**
- * Migrate stored exercises to include secondary muscle groups from initial data
+ * Migrate stored exercises to include secondary muscle groups and updated imageUrls from initial data
  */
 const migrateExercises = (storedExercises: ExerciseDefinition[]): ExerciseDefinition[] => {
     const initialExercises = createInitialExercises();
@@ -14,12 +14,23 @@ const migrateExercises = (storedExercises: ExerciseDefinition[]): ExerciseDefini
         // Find matching exercise in initial data (for built-in exercises)
         const initial = initialExercises.find(ex => ex.id === stored.id);
         
-        // If it's a built-in exercise and has no secondaryMuscleGroups, migrate it
-        if (initial && !stored.isCustom && !stored.secondaryMuscleGroups && initial.secondaryMuscleGroups) {
-            return {
-                ...stored,
-                secondaryMuscleGroups: initial.secondaryMuscleGroups
-            };
+        // If it's a built-in exercise, update from initial data
+        if (initial && !stored.isCustom) {
+            const updates: Partial<ExerciseDefinition> = {};
+            
+            // Migrate secondaryMuscleGroups if missing
+            if (!stored.secondaryMuscleGroups && initial.secondaryMuscleGroups) {
+                updates.secondaryMuscleGroups = initial.secondaryMuscleGroups;
+            }
+            
+            // Always use the latest imageUrl from initial data for built-in exercises
+            if (initial.imageUrl && stored.imageUrl !== initial.imageUrl) {
+                updates.imageUrl = initial.imageUrl;
+            }
+            
+            if (Object.keys(updates).length > 0) {
+                return { ...stored, ...updates };
+            }
         }
         
         return stored;
