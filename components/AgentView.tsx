@@ -280,11 +280,22 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
       {/* Generated Workout */}
       {generatedWorkout && (
         <div className="space-y-4">
-          {/* Cache Badge */}
+          {/* Cache Badge with Force Refresh */}
           {isCached && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <Calendar size={14} className="text-blue-400" />
-              <span className="text-xs text-blue-300">Lagret opplegg fra i dag</span>
+            <div className="flex items-center justify-between px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Calendar size={14} className="text-blue-400" />
+                <span className="text-xs text-blue-300">Lagret opplegg fra i dag</span>
+              </div>
+              <button
+                onClick={() => generateWorkout(true)}
+                disabled={isGenerating}
+                className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 rounded text-xs text-blue-300 hover:text-blue-200 transition-colors disabled:opacity-50"
+                title="Generer helt nytt opplegg"
+              >
+                <RefreshCw size={12} />
+                <span>Generer nytt</span>
+              </button>
             </div>
           )}
           
