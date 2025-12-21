@@ -40,6 +40,7 @@ const ProfileView = lazy(() => import('./components/ProfileView'));
 const InfoView = lazy(() => import('./components/InfoView'));
 const AgentView = lazy(() => import('./components/AgentView'));
 const HistoryOverviewChart = lazy(() => import('./components/HistoryOverviewChart'));
+const ExerciseDistributionChart = lazy(() => import('./components/ExerciseDistributionChart'));
 const HistoryCalendar = lazy(() => import('./components/HistoryCalendar'));
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
 import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock } from 'lucide-react';
@@ -550,6 +551,13 @@ export default function App() {
         <Suspense fallback={<div className="h-48 bg-surface rounded-xl animate-pulse" />}>
           {filteredHistory.length >= 2 && (
             <HistoryOverviewChart history={filteredHistory} exercises={exercises} />
+          )}
+        </Suspense>
+
+        {/* Exercise Distribution Chart */}
+        <Suspense fallback={<div className="h-48 bg-surface rounded-xl animate-pulse" />}>
+          {filteredHistory.length > 0 && (
+            <ExerciseDistributionChart history={filteredHistory} exercises={exercises} />
           )}
         </Suspense>
 

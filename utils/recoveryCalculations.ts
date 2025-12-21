@@ -73,15 +73,18 @@ export function calculateMuscleGroupRecovery(
       status = 'fresh';
       message = 'Trent i dag! 💪';
     } else if (daysSince === 1) {
-      status = 'warning';
-      message = 'Trent i går - kanskje hvile?';
-    } else if (daysSince <= 3) {
+      status = 'fresh';
+      message = 'Trent i går - fortsatt fersk';
+    } else if (daysSince >= 2 && daysSince <= 4) {
+      status = 'ready';
+      message = `${daysSince} dager siden - godt restituert, klar for trening!`;
+    } else if (daysSince >= 5 && daysSince <= 7) {
       status = 'ready';
       message = `${daysSince} dager siden - klar for trening`;
-    } else if (daysSince <= 7) {
-      status = 'ready';
-      message = `${daysSince} dager siden - god tid siden sist`;
-    } else if (daysSince <= 14) {
+    } else if (daysSince >= 8 && daysSince <= 10) {
+      status = 'warning';
+      message = `${daysSince} dager siden - bør snart trenes`;
+    } else if (daysSince >= 11 && daysSince <= 14) {
       status = 'overdue';
       message = `${daysSince} dager siden - på tide å trene!`;
     } else if (daysSince === 999) {
