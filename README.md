@@ -15,9 +15,9 @@ En moderne Progressive Web App (PWA) for treningstracking med AI-genererte treni
 |---------------|--------|----------|
 | ![KI-anbefaling](screenshots/KI-anbefaling.13.png) | ![Profil](screenshots/Profil-treningsmål.png) | ![Ernæring](screenshots/Ernæring.png) |
 
-| Ernæringsguide | Om appen |
-|----------------|----------|
-| ![Ernæringsguide](screenshots/Ernæringsguide.png) | ![Om appen](screenshots/Om%20appen.png) |
+| Treningsstatistikk | Ernæringsguide | Om appen |
+|--------------------|----------------|----------|
+| ![Treningsstatistikk](screenshots/treningsstatistikk.png) | ![Ernæringsguide](screenshots/Ernæringsguide.png) | ![Om appen](screenshots/Om%20appen.png) |
 
 </details>
 
