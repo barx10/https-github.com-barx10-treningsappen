@@ -16,8 +16,7 @@ const ExerciseDistributionChart: React.FC<ExerciseDistributionChartProps> = ({ h
         [MuscleGroup.LEGS]: '#10b981',
         [MuscleGroup.ARMS]: '#8b5cf6',
         [MuscleGroup.CORE]: '#ec4899',
-        [MuscleGroup.CARDIO]: '#06b6d4',
-        [MuscleGroup.FULL_BODY]: '#6366f1'
+        [MuscleGroup.CARDIO]: '#06b6d4'
     };
 
     const chartData = useMemo(() => {
