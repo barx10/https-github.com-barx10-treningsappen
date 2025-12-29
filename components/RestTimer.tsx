@@ -10,39 +10,69 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
     const [isRunning, setIsRunning] = useState(false);
     const [initialTime, setInitialTime] = useState(90);
     const [isCompact, setIsCompact] = useState(false);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-    const beepAudioRef = useRef<HTMLAudioElement | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number | null>(null);
     const remainingRef = useRef<number>(90);
     const hasPlayedBeepsRef = useRef<Set<number>>(new Set());
 
-    useEffect(() => {
-        // Create audio element for completion notification
-        audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWi77eafTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEAKFF606+uoVRQKRp/g8r5sIQUrgs7y2Ik2CBlou+3mn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBAC');
-        
-        // Create a more noticeable beep sound using Web Audio API
-        const createBeepSound = () => {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
+    // Initialize AudioContext on first user interaction
+    const ensureAudioContext = () => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
+        return audioContextRef.current;
+    };
+
+    const playBeep = (frequency: number = 800, duration: number = 0.1) => {
+        try {
+            const ctx = ensureAudioContext();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
             oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 800; // Higher frequency for beep
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.value = frequency;
             oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
-        };
-        
-        // Store beep function
-        (beepAudioRef as any).current = createBeepSound;
-    }, []);
+
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + duration);
+        } catch (e) {
+            // Ignore audio errors
+        }
+    };
+
+    const playCompletionSound = () => {
+        try {
+            const ctx = ensureAudioContext();
+            // Play two tones for completion
+            [0, 0.15].forEach((delay, i) => {
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.frequency.value = i === 0 ? 600 : 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.2);
+
+                oscillator.start(ctx.currentTime + delay);
+                oscillator.stop(ctx.currentTime + delay + 0.2);
+            });
+        } catch (e) {
+            // Ignore audio errors
+        }
+    };
 
     useEffect(() => {
         if (isRunning) {
@@ -54,32 +84,27 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
             const updateTimer = () => {
                 const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
                 const newTimeLeft = Math.max(0, remainingRef.current - elapsed);
-                
+
                 setTimeLeft(newTimeLeft);
 
                 // Play beep sound at 3, 2, 1 seconds
                 if (newTimeLeft > 0 && newTimeLeft <= 3 && !hasPlayedBeepsRef.current.has(newTimeLeft)) {
                     hasPlayedBeepsRef.current.add(newTimeLeft);
-                    if (beepAudioRef.current && typeof beepAudioRef.current === 'function') {
-                        beepAudioRef.current(); // Call the Web Audio API function
-                    }
+                    playBeep(800 + (3 - newTimeLeft) * 100, 0.15); // Higher pitch as countdown progresses
                 }
 
                 if (newTimeLeft === 0) {
                     setIsRunning(false);
                     startTimeRef.current = null;
-                    hasPlayedBeepsRef.current.clear(); // Reset for next timer
-                    // Play completion sound
-                    if (audioRef.current) {
-                        audioRef.current.play().catch(() => { });
-                    }
+                    hasPlayedBeepsRef.current.clear();
+                    playCompletionSound();
                     if (onComplete) onComplete();
                 }
             };
 
             // Update immediately
             updateTimer();
-            
+
             // Then update every 100ms
             timerRef.current = setInterval(updateTimer, 100);
         } else {
@@ -103,6 +128,8 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
     };
 
     const handleStart = () => {
+        // Initialize AudioContext on user interaction (required by browsers)
+        ensureAudioContext();
         if (timeLeft === 0) {
             setTimeLeft(initialTime);
         }
