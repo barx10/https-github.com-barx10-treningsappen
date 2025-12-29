@@ -289,6 +289,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
                           value={set.durationMinutes || ''}
                           placeholder="Min"
                           onChange={(e) => handleUpdateSet(exIndex, setIndex, 'durationMinutes', parseFloat(e.target.value))}
+                          onFocus={(e) => e.target.select()}
                           className="w-full bg-background border border-slate-700 rounded p-2 text-center font-mono focus:border-primary focus:outline-none"
                         />
                       ) : (
@@ -298,6 +299,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
                             value={set.weight || ''}
                             placeholder="Kg"
                             onChange={(e) => handleUpdateSet(exIndex, setIndex, 'weight', parseFloat(e.target.value))}
+                            onFocus={(e) => e.target.select()}
                             className="w-full bg-background border border-slate-700 rounded p-2 text-center font-mono focus:border-primary focus:outline-none"
                           />
                         )
@@ -313,6 +315,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
                           value={set.reps || ''}
                           placeholder="0"
                           onChange={(e) => handleUpdateSet(exIndex, setIndex, 'reps', parseFloat(e.target.value))}
+                          onFocus={(e) => e.target.select()}
                           className="w-full bg-background border border-slate-700 rounded p-2 text-center font-mono focus:border-primary focus:outline-none"
                         />
                       ) : (
