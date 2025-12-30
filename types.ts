@@ -5,7 +5,8 @@ export enum MuscleGroup {
   SHOULDERS = 'Skuldre',
   ARMS = 'Armer',
   CORE = 'Kjerne',
-  CARDIO = 'Kondisjon'
+  CARDIO = 'Kondisjon',
+  FULL_BODY = 'Helkropp'
 }
 
 export enum ExerciseType {

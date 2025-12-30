@@ -909,6 +909,80 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Farmers-Walk.gif'
   },
 
+  // === HELKROPP ===
+  {
+    id: 'ex_burpee',
+    name: 'Burpees',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.LEGS, MuscleGroup.CORE],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Start stående. Gå ned i push-up posisjon, gjør en push-up. Hopp føttene frem og eksploder opp i et hopp med armene over hodet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Burpee.gif'
+  },
+  {
+    id: 'ex_thruster',
+    name: 'Thrusters',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold vekter ved skuldrene. Gjør en dyp knebøy, og i oppreisningen presser du vektene rett opp over hodet i én flytende bevegelse.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Thruster.gif'
+  },
+  {
+    id: 'ex_clean_press',
+    name: 'Clean and Press',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Løft vekten fra gulvet til skuldrene (clean), deretter press den over hodet. Senk kontrollert tilbake.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Clean-and-Press.gif'
+  },
+  {
+    id: 'ex_kettlebell_swing',
+    name: 'Kettlebell Swing',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.LEGS, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold kettlebellen med begge hender. Sving den mellom beina og bruk hofteekstensjon til å drive den opp til brysthøyde. Hold armene strake.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Kettlebell-Swing.gif'
+  },
+  {
+    id: 'ex_man_maker',
+    name: 'Man Makers',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.BACK, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Start i push-up posisjon med manualer. Gjør push-up, ro med hver arm, hopp føttene frem, reis deg opp med clean og press over hodet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Dumbbell-Man-Maker.gif'
+  },
+  {
+    id: 'ex_devil_press',
+    name: 'Devil Press',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Gjør en burpee med manualer i hendene. I oppreisningen svinger du manualene mellom beina og presser dem over hodet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Dumbbell-Devil-Press.gif'
+  },
+  {
+    id: 'ex_turkish_getup',
+    name: 'Turkish Get-Up',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.CORE, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Ligg på ryggen med en vekt i én hånd strukket opp. Reis deg opp til stående stilling mens du holder vekten over hodet hele veien.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Kettlebell-Turkish-Get-Up.gif'
+  },
+  {
+    id: 'ex_wall_ball',
+    name: 'Wall Balls',
+    muscleGroup: MuscleGroup.FULL_BODY,
+    secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold en medisinball ved brystet. Gjør en dyp knebøy, og i oppreisningen kaster du ballen opp mot et mål på veggen. Fang og gjenta.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Ball-Squat.gif'
+  },
+
 ].sort((a, b) => {
   // Sorteringsrekkefølge for muskelgrupper
   const muscleGroupOrder: Record<MuscleGroup, number> = {
@@ -919,6 +993,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     [MuscleGroup.LEGS]: 5,
     [MuscleGroup.CORE]: 6,
     [MuscleGroup.CARDIO]: 7,
+    [MuscleGroup.FULL_BODY]: 8,
   };
 
   // Først sorter etter muskelgruppe

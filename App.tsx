@@ -591,6 +591,7 @@ export default function App() {
       [MuscleGroup.LEGS]: { color: 'text-green-400', bgColor: 'bg-green-500/20', iconColor: 'text-green-400' },
       [MuscleGroup.CORE]: { color: 'text-orange-400', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-400' },
       [MuscleGroup.CARDIO]: { color: 'text-pink-400', bgColor: 'bg-pink-500/20', iconColor: 'text-pink-400' },
+      [MuscleGroup.FULL_BODY]: { color: 'text-cyan-400', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
     };
 
     // Tell antall øvelser per kategori
