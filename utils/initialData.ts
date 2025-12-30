@@ -372,6 +372,543 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/09/Walking.gif'
   },
 
+  // --- Flere Brystøvelser ---
+  {
+    id: 'ex_decline_press',
+    name: 'Decline Benkpress',
+    muscleGroup: MuscleGroup.CHEST,
+    secondaryMuscleGroups: [MuscleGroup.ARMS, MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Ligg på en skråbenk med hodet lavere enn føttene. Senk stangen kontrollert ned til nedre del av brystet. Press stangen opp til armene er strake.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Decline-Barbell-Bench-Press.gif'
+  },
+  {
+    id: 'ex_pec_deck',
+    name: 'Pec Deck / Butterfly',
+    muscleGroup: MuscleGroup.CHEST,
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt i maskinen med ryggen mot puten. Plasser underarmene mot putene. Press armene sammen foran brystet. Returner kontrollert.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pec-Deck-Fly.gif'
+  },
+  {
+    id: 'ex_chest_press_machine',
+    name: 'Brystpress (Maskin)',
+    muscleGroup: MuscleGroup.CHEST,
+    secondaryMuscleGroups: [MuscleGroup.ARMS, MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt i maskinen med ryggen mot setet. Grip håndtakene og press fremover til armene er nesten strake. Returner kontrollert.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Chest-Press-Machine.gif'
+  },
+  {
+    id: 'ex_dumbbell_fly',
+    name: 'Dumbbell Fly',
+    muscleGroup: MuscleGroup.CHEST,
+    secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Ligg på benken med manualene over brystet. Senk armene ut til siden i en bue med lett bøy i albuene. Før armene tilbake opp i en klem-bevegelse.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Fly.gif'
+  },
+  {
+    id: 'ex_svend_press',
+    name: 'Svend Press',
+    muscleGroup: MuscleGroup.CHEST,
+    secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold en vektskive mellom håndflatene foran brystet. Press hendene sammen og skyv skiven rett frem. Trekk tilbake til brystet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Svend-Press.gif'
+  },
+
+  // --- Flere Ryggøvelser ---
+  {
+    id: 'ex_single_arm_row',
+    name: 'Enarms Roing',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.ARMS, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Støtt en hånd og kne på en benk. Hold en manual i den andre hånden. Trekk vekten opp mot hoften med albuen tett inntil kroppen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Row.gif'
+  },
+  {
+    id: 'ex_bent_over_row',
+    name: 'Bøyd Roing',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.ARMS, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå med lett bøyde knær og len overkroppen fremover. Hold stangen med strake armer. Trekk stangen opp mot magen mens du klemmer skulderbladene sammen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bent-Over-Row.gif'
+  },
+  {
+    id: 'ex_reverse_fly',
+    name: 'Reverse Fly',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Len deg fremover med en manual i hver hånd. Løft armene ut til siden med lett bøy i albuene. Fokuser på å klemme skulderbladene sammen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Reverse-Fly.gif'
+  },
+  {
+    id: 'ex_close_grip_pulldown',
+    name: 'Nedtrekk (Tett grep)',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.ARMS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Grip V-håndtaket med begge hender. Trekk håndtaket ned til øvre del av brystet med albuene tett inntil kroppen. Slipp kontrollert opp.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/V-bar-Lat-Pulldown.gif'
+  },
+  {
+    id: 'ex_straight_arm_pulldown',
+    name: 'Strak Arm Nedtrekk',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå foran en kabelstasjon. Med strake armer, trekk stangen ned mot lårene. Hold magen stram og fokuser på å bruke latissimus.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Rope-Straight-Arm-Pulldown.gif'
+  },
+  {
+    id: 'ex_chinup',
+    name: 'Chin-ups',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.ARMS],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Heng i stangen med underhåndsgrep (håndflater mot deg). Trekk deg opp til haken er over stangen. Senk deg kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Chin-up.gif'
+  },
+  {
+    id: 'ex_shrug',
+    name: 'Skuldertrekk (Shrugs)',
+    muscleGroup: MuscleGroup.BACK,
+    secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå med vekter i hendene langs siden. Løft skuldrene rett opp mot ørene. Hold i ett sekund og senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shrug.gif'
+  },
+
+  // --- Flere Skulderøvelser ---
+  {
+    id: 'ex_front_raise',
+    name: 'Fronthev',
+    muscleGroup: MuscleGroup.SHOULDERS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå med manualene foran lårene. Løft en arm rett frem til skulderhøyde. Senk kontrollert ned og gjenta med andre arm.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Front-Raise.gif'
+  },
+  {
+    id: 'ex_rear_delt_fly',
+    name: 'Bakre Skulderhev',
+    muscleGroup: MuscleGroup.SHOULDERS,
+    secondaryMuscleGroups: [MuscleGroup.BACK],
+    type: ExerciseType.WEIGHTED,
+    description: 'Len deg fremover i hoften. Med lett bøy i albuene, løft armene ut til siden. Fokuser på bakre del av skulderen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Rear-Delt-Fly.gif'
+  },
+  {
+    id: 'ex_upright_row',
+    name: 'Opptrekk',
+    muscleGroup: MuscleGroup.SHOULDERS,
+    secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.ARMS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold stangen eller manualene foran lårene. Trekk vekten opp langs kroppen til brysthøyde med albuene høyt. Senk kontrollert.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Upright-Row.gif'
+  },
+  {
+    id: 'ex_cable_lateral',
+    name: 'Kabel Sidehev',
+    muscleGroup: MuscleGroup.SHOULDERS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå ved siden av en lav kabel. Trekk kabelen ut til siden til armen er på skulderhøyde. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Lateral-Raise.gif'
+  },
+  {
+    id: 'ex_seated_press',
+    name: 'Sittende Skulderpress',
+    muscleGroup: MuscleGroup.SHOULDERS,
+    secondaryMuscleGroups: [MuscleGroup.ARMS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt med ryggstøtte. Press manualene fra skulderhøyde opp over hodet til armene er strake. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Seated-Shoulder-Press.gif'
+  },
+  {
+    id: 'ex_landmine_press',
+    name: 'Landmine Press',
+    muscleGroup: MuscleGroup.SHOULDERS,
+    secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold enden av en stang festet i gulvet. Press stangen opp og fremover i en bue. Kontroller bevegelsen ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Landmine-Press.gif'
+  },
+
+  // --- Flere Beinøvelser ---
+  {
+    id: 'ex_leg_extension',
+    name: 'Leg Extension',
+    muscleGroup: MuscleGroup.LEGS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt i maskinen med knærne i 90 grader. Strekk beina ut til de er nesten strake. Senk kontrollert ned igjen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/LEG-EXTENSION.gif'
+  },
+  {
+    id: 'ex_hip_thrust',
+    name: 'Hip Thrust',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Len øvre rygg mot en benk. Plasser en vektstang over hoften. Driv hoften opp mot taket ved å stramme setet. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Hip-Thrust.gif'
+  },
+  {
+    id: 'ex_sumo_squat',
+    name: 'Sumo Knebøy',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå med bred benstilling og tærne pekende utover. Hold en vekt foran kroppen. Senk deg ned til lårene er parallelle med gulvet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Dumbbell-Sumo-Squat.gif'
+  },
+  {
+    id: 'ex_hack_squat',
+    name: 'Hack Squat',
+    muscleGroup: MuscleGroup.LEGS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Plasser deg i hack squat-maskinen med skuldrene under putene. Senk deg ned til knærne er i 90 grader. Press opp igjen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Sled-Hack-Squat.gif'
+  },
+  {
+    id: 'ex_good_morning',
+    name: 'Good Mornings',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Plasser en stang på øvre rygg. Med lett bøy i knærne, bøy fremover i hoften til overkroppen er nesten parallell med gulvet. Reis deg opp igjen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif'
+  },
+  {
+    id: 'ex_adductor',
+    name: 'Adduktor Maskin',
+    muscleGroup: MuscleGroup.LEGS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt i maskinen med beina spredt. Press beina sammen mot hverandre. Returner kontrollert til start.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Hip-Adduction-Machine.gif'
+  },
+  {
+    id: 'ex_abductor',
+    name: 'Abduktor Maskin',
+    muscleGroup: MuscleGroup.LEGS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt i maskinen med beina sammen. Press beina ut til siden mot motstanden. Returner kontrollert til start.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/HIP-ABDUCTION-MACHINE.gif'
+  },
+  {
+    id: 'ex_front_squat',
+    name: 'Front Squat',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CORE],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold stangen foran skuldrene med albuene høyt. Senk deg ned i en knebøy med oppreist overkropp. Press opp igjen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/FRONT-SQUAT.gif'
+  },
+  {
+    id: 'ex_sissy_squat',
+    name: 'Sissy Squat',
+    muscleGroup: MuscleGroup.LEGS,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Hold i noe for balanse. Len deg bakover mens du bøyer knærne og går opp på tærne. Knærne beveger seg fremover. Kjenn strekk i lårene.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/09/Sissy-Squat.gif'
+  },
+  {
+    id: 'ex_nordic_curl',
+    name: 'Nordic Hamstring Curl',
+    muscleGroup: MuscleGroup.LEGS,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Knel med anklene festet. Senk kroppen fremover kontrollert ved å bruke hamstrings som brems. Bruk hendene til å dytte deg tilbake opp.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Nordic-Hamstring-Curl.gif'
+  },
+  {
+    id: 'ex_donkey_kick',
+    name: 'Donkey Kicks',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CORE],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Start på alle fire. Spark ett bein opp og bakover med bøyd kne. Klem setemusklene på toppen. Senk ned og gjenta.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Donkey-Kicks.gif'
+  },
+
+  // --- Flere Armøvelser ---
+  {
+    id: 'ex_hammer_curl',
+    name: 'Hammer Curl',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold manualene med nøytralt grep (tommelen opp). Bøy albuene for å løfte vektene. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Hammer-Curl.gif'
+  },
+  {
+    id: 'ex_preacher_curl',
+    name: 'Preacher Curl',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Hvil overarmene på preacher-benken. Bøy albuene for å løfte stangen opp mot skuldrene. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Preacher-Curl.gif'
+  },
+  {
+    id: 'ex_cable_curl',
+    name: 'Kabel Bicep Curl',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå foran en lav kabel. Grip håndtaket og curl opp mot skuldrene. Hold albuene stille. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Curl.gif'
+  },
+  {
+    id: 'ex_concentration_curl',
+    name: 'Concentration Curl',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt med albuen hvilende mot innsiden av låret. Curl manualen opp mot skulderen. Fokuser på full sammentrekning.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Concentration-Curl.gif'
+  },
+  {
+    id: 'ex_tricep_pushdown',
+    name: 'Tricep Pushdown',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå foran kabelmaskin med tau eller stang. Press vekten ned ved å strekke albuene. Hold overarmene stille.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pushdown.gif'
+  },
+  {
+    id: 'ex_skull_crusher',
+    name: 'Skull Crushers',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Ligg på en benk med stangen over brystet. Senk stangen mot pannen ved å bøye albuene. Strekk armene tilbake opp.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Skull-Crusher.gif'
+  },
+  {
+    id: 'ex_close_grip_bench',
+    name: 'Tett Grep Benkpress',
+    muscleGroup: MuscleGroup.ARMS,
+    secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Ligg på benken med hendene skulderbredde fra hverandre. Senk stangen til brystet og press opp. Fokuser på triceps.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Close-Grip-Barbell-Bench-Press.gif'
+  },
+  {
+    id: 'ex_tricep_kickback',
+    name: 'Tricep Kickback',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Len deg fremover med en manual i hånden. Hold overarmen parallell med gulvet. Strekk underarmen bakover. Senk kontrollert.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Tricep-Kickback.gif'
+  },
+  {
+    id: 'ex_wrist_curl',
+    name: 'Håndleddscurl',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Sitt med underarmene på lårene og håndleddene over kanten. Curl vekten opp ved å bøye håndleddene. Senk kontrollert.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Wrist-Curl.gif'
+  },
+  {
+    id: 'ex_reverse_curl',
+    name: 'Reverse Curl',
+    muscleGroup: MuscleGroup.ARMS,
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold stangen med overhåndsgrep (håndflater ned). Curl stangen opp mot skuldrene. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Reverse-Curl.gif'
+  },
+
+  // --- Flere Kjerneøvelser ---
+  {
+    id: 'ex_crunch',
+    name: 'Crunches',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Ligg på ryggen med bøyde knær. Løft skuldrene opp fra gulvet ved å stramme magen. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Crunch.gif'
+  },
+  {
+    id: 'ex_leg_raise',
+    name: 'Liggende Benhev',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Ligg på ryggen med strake bein. Løft beina opp mot taket ved å bruke magemusklene. Senk kontrollert ned uten å berøre gulvet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lying-Leg-Raise.gif'
+  },
+  {
+    id: 'ex_ab_rollout',
+    name: 'Ab Rollout',
+    muscleGroup: MuscleGroup.CORE,
+    secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Knel med ab-wheel foran deg. Rull hjulet fremover mens du strekker kroppen. Hold magen stram. Rull tilbake til start.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Ab-Wheel-Rollout.gif'
+  },
+  {
+    id: 'ex_bicycle_crunch',
+    name: 'Bicycle Crunches',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Ligg på ryggen med hendene bak hodet. Roter overkroppen og før albuen mot motsatt kne mens du strekker det andre beinet. Bytt side.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bicycle-Crunch.gif'
+  },
+  {
+    id: 'ex_mountain_climber',
+    name: 'Mountain Climbers',
+    muscleGroup: MuscleGroup.CORE,
+    secondaryMuscleGroups: [MuscleGroup.CARDIO, MuscleGroup.SHOULDERS],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Start i push-up posisjon. Trekk knærne vekselvis inn mot brystet i et raskt tempo. Hold kroppen stabil.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Mountain-Climber.gif'
+  },
+  {
+    id: 'ex_cable_crunch',
+    name: 'Kabel Crunch',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.WEIGHTED,
+    description: 'Knel foran en høy kabel. Hold tauet bak hodet. Bøy overkroppen ned mot gulvet ved å bruke magemusklene.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crunch.gif'
+  },
+  {
+    id: 'ex_reverse_crunch',
+    name: 'Reverse Crunch',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Ligg på ryggen med bøyde knær. Løft hoften opp fra gulvet ved å trekke knærne mot brystet. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Crunch.gif'
+  },
+  {
+    id: 'ex_v_up',
+    name: 'V-ups',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Ligg på ryggen med strake armer og bein. Løft overkropp og bein samtidig for å møtes i midten. Senk kontrollert ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/V-up.gif'
+  },
+  {
+    id: 'ex_bird_dog',
+    name: 'Bird Dog',
+    muscleGroup: MuscleGroup.CORE,
+    secondaryMuscleGroups: [MuscleGroup.BACK],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Start på alle fire. Strekk motsatt arm og bein ut i en linje. Hold i 2-3 sekunder. Bytt side.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bird-Dog.gif'
+  },
+  {
+    id: 'ex_pallof_press',
+    name: 'Pallof Press',
+    muscleGroup: MuscleGroup.CORE,
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå sidelengs mot en kabel i brysthøyde. Hold håndtaket mot brystet. Press armene rett frem og hold. Motstå rotasjonen.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/pallof-press.gif'
+  },
+
+  // --- Flere Kondisjons- og Plyometriske Øvelser ---
+  {
+    id: 'ex_jumping_jack',
+    name: 'Jumping Jacks',
+    muscleGroup: MuscleGroup.CARDIO,
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Start med føttene sammen og armene langs siden. Hopp ut til bena er bredt og armene over hodet. Hopp tilbake til start.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Jumping-Jack.gif'
+  },
+  {
+    id: 'ex_burpee',
+    name: 'Burpees',
+    muscleGroup: MuscleGroup.CARDIO,
+    secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.LEGS, MuscleGroup.CORE],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Gå ned i push-up posisjon. Utfør en push-up. Hopp føttene frem mot hendene. Hopp opp med armene over hodet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Burpee.gif'
+  },
+  {
+    id: 'ex_box_jump',
+    name: 'Box Jumps',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CARDIO],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Stå foran en kasse. Svinge armene og hopp opp på kassen. Land mykt med bøyde knær. Steg ned og gjenta.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Box-Jump.gif'
+  },
+  {
+    id: 'ex_jump_rope',
+    name: 'Hopptau',
+    muscleGroup: MuscleGroup.CARDIO,
+    secondaryMuscleGroups: [MuscleGroup.LEGS],
+    type: ExerciseType.DURATION,
+    description: 'Hopp over tauet med lette hopp på tærne. Hold albuene nær kroppen og roter tauet med håndleddene.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Rope.gif'
+  },
+  {
+    id: 'ex_high_knees',
+    name: 'Høye Kneløft',
+    muscleGroup: MuscleGroup.CARDIO,
+    secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.CORE],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Løft knærne høyt vekselvis i et raskt tempo. Pump armene som ved løping. Hold overkroppen oppreist.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/High-Knee-Run.gif'
+  },
+  {
+    id: 'ex_battle_ropes',
+    name: 'Battle Ropes',
+    muscleGroup: MuscleGroup.CARDIO,
+    secondaryMuscleGroups: [MuscleGroup.ARMS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
+    type: ExerciseType.DURATION,
+    description: 'Hold ett tau i hver hånd. Lag bølger ved å bevege armene opp og ned vekselvis. Kan også gjøres samtidig eller sidelengs.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/08/Battle-Rope.gif'
+  },
+  {
+    id: 'ex_kettlebell_swing',
+    name: 'Kettlebell Swing',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.CORE, MuscleGroup.SHOULDERS],
+    type: ExerciseType.WEIGHTED,
+    description: 'Stå med bena i hoftebredde. Svinge kettlebellen mellom beina og opp til brysthøyde ved å drive hoften fremover. Kontroller ned.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Kettlebell-Swing.gif'
+  },
+  {
+    id: 'ex_squat_jump',
+    name: 'Squat Jumps',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CARDIO],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Utfør en vanlig knebøy. Fra bunnen, eksploder opp i et hopp. Land mykt og gå rett ned i neste rep.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Squat-Jump.gif'
+  },
+  {
+    id: 'ex_lunge_jump',
+    name: 'Jumping Lunges',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CARDIO, MuscleGroup.CORE],
+    type: ExerciseType.BODYWEIGHT,
+    description: 'Start i utfallsposisjon. Hopp opp og bytt bein i luften. Land i utfall med motsatt bein foran.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/08/Split-Jump.gif'
+  },
+  {
+    id: 'ex_sprint',
+    name: 'Sprint',
+    muscleGroup: MuscleGroup.CARDIO,
+    secondaryMuscleGroups: [MuscleGroup.LEGS],
+    type: ExerciseType.CARDIO,
+    description: 'Løp så fort du kan over en kort distanse (20-100m). Fullt fokus på maksimal hastighet.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/10/Sprinting.gif'
+  },
+  {
+    id: 'ex_sled_push',
+    name: 'Sled Push',
+    muscleGroup: MuscleGroup.LEGS,
+    secondaryMuscleGroups: [MuscleGroup.CORE, MuscleGroup.CARDIO],
+    type: ExerciseType.WEIGHTED,
+    description: 'Len deg inn mot sleden med strake armer. Driv med beina for å skyve sleden fremover. Hold en lav, stabil posisjon.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/08/Sled-Push.gif'
+  },
+  {
+    id: 'ex_farmer_walk',
+    name: 'Farmer\'s Walk',
+    muscleGroup: MuscleGroup.CORE,
+    secondaryMuscleGroups: [MuscleGroup.ARMS, MuscleGroup.LEGS, MuscleGroup.BACK],
+    type: ExerciseType.WEIGHTED,
+    description: 'Hold tunge vekter i hver hånd. Gå med korte, kontrollerte skritt. Hold ryggen rett og skuldrene tilbake.',
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Farmers-Walk.gif'
+  },
+
 ].sort((a, b) => a.name.localeCompare(b.name)); // Sorterer alfabetisk for bedre oversikt
 
 // Hjelpefunksjon for å lage sett
