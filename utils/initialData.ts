@@ -909,7 +909,25 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Farmers-Walk.gif'
   },
 
-].sort((a, b) => a.name.localeCompare(b.name)); // Sorterer alfabetisk for bedre oversikt
+].sort((a, b) => {
+  // Sorteringsrekkefølge for muskelgrupper
+  const muscleGroupOrder: Record<MuscleGroup, number> = {
+    [MuscleGroup.CHEST]: 1,
+    [MuscleGroup.BACK]: 2,
+    [MuscleGroup.SHOULDERS]: 3,
+    [MuscleGroup.ARMS]: 4,
+    [MuscleGroup.LEGS]: 5,
+    [MuscleGroup.CORE]: 6,
+    [MuscleGroup.CARDIO]: 7,
+  };
+
+  // Først sorter etter muskelgruppe
+  const groupDiff = muscleGroupOrder[a.muscleGroup] - muscleGroupOrder[b.muscleGroup];
+  if (groupDiff !== 0) return groupDiff;
+
+  // Deretter alfabetisk innenfor hver gruppe
+  return a.name.localeCompare(b.name);
+})
 
 // Hjelpefunksjon for å lage sett
 const createSets = (count: number, reps: number = 10) => {
