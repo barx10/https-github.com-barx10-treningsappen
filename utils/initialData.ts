@@ -462,7 +462,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Stå foran en kabelstasjon. Med strake armer, trekk stangen ned mot lårene. Hold magen stram og fokuser på å bruke latissimus.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Rope-Straight-Arm-Pulldown.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Rope-Straight-Arm-Pulldown.gif'
   },
   {
     id: 'ex_chinup',
@@ -480,7 +480,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
     type: ExerciseType.WEIGHTED,
     description: 'Stå med vekter i hendene langs siden. Løft skuldrene rett opp mot ørene. Hold i ett sekund og senk kontrollert ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shrug.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Dumbbell-Shrug.gif'
   },
 
   // --- Flere Skulderøvelser ---
@@ -499,7 +499,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.BACK],
     type: ExerciseType.WEIGHTED,
     description: 'Len deg fremover i hoften. Med lett bøy i albuene, løft armene ut til siden. Fokuser på bakre del av skulderen.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Rear-Delt-Fly.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bent-Over-Lateral-Raise.gif'
   },
   {
     id: 'ex_upright_row',
@@ -519,22 +519,13 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Lateral-Raise.gif'
   },
   {
-    id: 'ex_seated_press',
-    name: 'Sittende Skulderpress',
-    muscleGroup: MuscleGroup.SHOULDERS,
-    secondaryMuscleGroups: [MuscleGroup.ARMS],
-    type: ExerciseType.WEIGHTED,
-    description: 'Sitt med ryggstøtte. Press manualene fra skulderhøyde opp over hodet til armene er strake. Senk kontrollert ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Seated-Shoulder-Press.gif'
-  },
-  {
     id: 'ex_landmine_press',
     name: 'Landmine Press',
     muscleGroup: MuscleGroup.SHOULDERS,
     secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Hold enden av en stang festet i gulvet. Press stangen opp og fremover i en bue. Kontroller bevegelsen ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Landmine-Press.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Landmine-Press.gif'
   },
 
   // --- Flere Beinøvelser ---
@@ -562,7 +553,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Stå med bred benstilling og tærne pekende utover. Hold en vekt foran kroppen. Senk deg ned til lårene er parallelle med gulvet.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Dumbbell-Sumo-Squat.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/dumbbell-sumo-squat.gif'
   },
   {
     id: 'ex_hack_squat',
@@ -595,7 +586,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.LEGS,
     type: ExerciseType.WEIGHTED,
     description: 'Sitt i maskinen med beina sammen. Press beina ut til siden mot motstanden. Returner kontrollert til start.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/HIP-ABDUCTION-MACHINE.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/HiP-ABDUCTION-MACHINE.gif'
   },
   {
     id: 'ex_front_squat',
@@ -604,7 +595,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Hold stangen foran skuldrene med albuene høyt. Senk deg ned i en knebøy med oppreist overkropp. Press opp igjen.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/FRONT-SQUAT.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/front-squat.gif'
   },
   {
     id: 'ex_sissy_squat',
@@ -612,7 +603,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.LEGS,
     type: ExerciseType.BODYWEIGHT,
     description: 'Hold i noe for balanse. Len deg bakover mens du bøyer knærne og går opp på tærne. Knærne beveger seg fremover. Kjenn strekk i lårene.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/09/Sissy-Squat.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/10/sissy-squat.gif'
   },
   {
     id: 'ex_nordic_curl',
@@ -620,7 +611,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.LEGS,
     type: ExerciseType.BODYWEIGHT,
     description: 'Knel med anklene festet. Senk kroppen fremover kontrollert ved å bruke hamstrings som brems. Bruk hendene til å dytte deg tilbake opp.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Nordic-Hamstring-Curl.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Nordic-Hamstring-Curl.gif'
   },
   {
     id: 'ex_donkey_kick',
@@ -647,7 +638,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.ARMS,
     type: ExerciseType.WEIGHTED,
     description: 'Hvil overarmene på preacher-benken. Bøy albuene for å løfte stangen opp mot skuldrene. Senk kontrollert ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Preacher-Curl.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Preacher-Curl.gif'
   },
   {
     id: 'ex_cable_curl',
@@ -655,7 +646,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.ARMS,
     type: ExerciseType.WEIGHTED,
     description: 'Stå foran en lav kabel. Grip håndtaket og curl opp mot skuldrene. Hold albuene stille. Senk kontrollert ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Curl.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/cable-curl.gif'
   },
   {
     id: 'ex_concentration_curl',
@@ -679,7 +670,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.ARMS,
     type: ExerciseType.WEIGHTED,
     description: 'Ligg på en benk med stangen over brystet. Senk stangen mot pannen ved å bøye albuene. Strekk armene tilbake opp.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Skull-Crusher.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Triceps-Extension.gif'
   },
   {
     id: 'ex_close_grip_bench',
@@ -688,7 +679,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.SHOULDERS],
     type: ExerciseType.WEIGHTED,
     description: 'Ligg på benken med hendene skulderbredde fra hverandre. Senk stangen til brystet og press opp. Fokuser på triceps.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Close-Grip-Barbell-Bench-Press.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Close-Grip-Bench-Press.gif'
   },
   {
     id: 'ex_tricep_kickback',
@@ -696,7 +687,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.ARMS,
     type: ExerciseType.WEIGHTED,
     description: 'Len deg fremover med en manual i hånden. Hold overarmen parallell med gulvet. Strekk underarmen bakover. Senk kontrollert.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Tricep-Kickback.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Kickback.gif'
   },
   {
     id: 'ex_wrist_curl',
@@ -704,7 +695,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.ARMS,
     type: ExerciseType.WEIGHTED,
     description: 'Sitt med underarmene på lårene og håndleddene over kanten. Curl vekten opp ved å bøye håndleddene. Senk kontrollert.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Wrist-Curl.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Wrist-Curl.gif'
   },
   {
     id: 'ex_reverse_curl',
@@ -739,7 +730,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.SHOULDERS],
     type: ExerciseType.BODYWEIGHT,
     description: 'Knel med ab-wheel foran deg. Rull hjulet fremover mens du strekker kroppen. Hold magen stram. Rull tilbake til start.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Ab-Wheel-Rollout.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Ab-Wheel-Rollout.gif'
   },
   {
     id: 'ex_bicycle_crunch',
@@ -764,7 +755,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.CORE,
     type: ExerciseType.WEIGHTED,
     description: 'Knel foran en høy kabel. Hold tauet bak hodet. Bøy overkroppen ned mot gulvet ved å bruke magemusklene.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crunch.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Kneeling-Cable-Crunch.gif'
   },
   {
     id: 'ex_reverse_crunch',
@@ -772,7 +763,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.CORE,
     type: ExerciseType.BODYWEIGHT,
     description: 'Ligg på ryggen med bøyde knær. Løft hoften opp fra gulvet ved å trekke knærne mot brystet. Senk kontrollert ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Crunch.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Crunch-1.gif'
   },
   {
     id: 'ex_v_up',
@@ -780,7 +771,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     muscleGroup: MuscleGroup.CORE,
     type: ExerciseType.BODYWEIGHT,
     description: 'Ligg på ryggen med strake armer og bein. Løft overkropp og bein samtidig for å møtes i midten. Senk kontrollert ned.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/V-up.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/10/Dumbbell-V-up.gif'
   },
   {
     id: 'ex_bird_dog',
@@ -789,7 +780,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.BACK],
     type: ExerciseType.BODYWEIGHT,
     description: 'Start på alle fire. Strekk motsatt arm og bein ut i en linje. Hold i 2-3 sekunder. Bytt side.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bird-Dog.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Bird-Dog.gif'
   },
   {
     id: 'ex_pallof_press',
@@ -879,7 +870,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CARDIO, MuscleGroup.CORE],
     type: ExerciseType.BODYWEIGHT,
     description: 'Start i utfallsposisjon. Hopp opp og bytt bein i luften. Land i utfall med motsatt bein foran.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/08/Split-Jump.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/05/Split-Squat.gif'
   },
   {
     id: 'ex_sprint',
@@ -889,15 +880,6 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     type: ExerciseType.CARDIO,
     description: 'Løp så fort du kan over en kort distanse (20-100m). Fullt fokus på maksimal hastighet.',
     imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/10/Sprinting.gif'
-  },
-  {
-    id: 'ex_sled_push',
-    name: 'Sled Push',
-    muscleGroup: MuscleGroup.LEGS,
-    secondaryMuscleGroups: [MuscleGroup.CORE, MuscleGroup.CARDIO],
-    type: ExerciseType.WEIGHTED,
-    description: 'Len deg inn mot sleden med strake armer. Driv med beina for å skyve sleden fremover. Hold en lav, stabil posisjon.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/08/Sled-Push.gif'
   },
   {
     id: 'ex_farmer_walk',
@@ -926,7 +908,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Hold vekter ved skuldrene. Gjør en dyp knebøy, og i oppreisningen presser du vektene rett opp over hodet i én flytende bevegelse.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Thruster.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/10/thruster.gif'
   },
   {
     id: 'ex_clean_press',
@@ -935,7 +917,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Løft vekten fra gulvet til skuldrene (clean), deretter press den over hodet. Senk kontrollert tilbake.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Clean-and-Press.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Barbell-Clean-and-Press-.gif'
   },
   {
     id: 'ex_kettlebell_swing',
@@ -953,7 +935,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.BACK, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Start i push-up posisjon med manualer. Gjør push-up, ro med hver arm, hopp føttene frem, reis deg opp med clean og press over hodet.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Dumbbell-Man-Maker.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Burpees.gif'
   },
   {
     id: 'ex_devil_press',
@@ -962,7 +944,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Gjør en burpee med manualer i hendene. I oppreisningen svinger du manualene mellom beina og presser dem over hodet.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Dumbbell-Devil-Press.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Dumbbell-Devil-Press.gif'
   },
   {
     id: 'ex_turkish_getup',
@@ -971,7 +953,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CORE, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Ligg på ryggen med en vekt i én hånd strukket opp. Reis deg opp til stående stilling mens du holder vekten over hodet hele veien.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Kettlebell-Turkish-Get-Up.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Turkish-Get-Up-Squat-style.gif'
   },
   {
     id: 'ex_wall_ball',
@@ -980,7 +962,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Hold en medisinball ved brystet. Gjør en dyp knebøy, og i oppreisningen kaster du ballen opp mot et mål på veggen. Fang og gjenta.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Ball-Squat.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2023/01/wall-ball.gif'
   },
 
 ].sort((a, b) => {
