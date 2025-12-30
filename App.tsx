@@ -6,6 +6,7 @@ import {
   Screen,
   WorkoutStatus,
   ExerciseType,
+  MuscleGroup,
   UserProfile,
   BackupData
 } from './types';
@@ -42,7 +43,7 @@ const HistoryOverviewChart = lazy(() => import('./components/HistoryOverviewChar
 const ExerciseDistributionChart = lazy(() => import('./components/ExerciseDistributionChart'));
 const HistoryCalendar = lazy(() => import('./components/HistoryCalendar'));
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
-import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock } from 'lucide-react';
+import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock, ChevronLeft } from 'lucide-react';
 
 export default function App() {
   // --- State ---
@@ -61,6 +62,7 @@ export default function App() {
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   const [historyDateFilter, setHistoryDateFilter] = useState<'all' | 'week' | 'month' | '3months'>('all');
   const [historyDisplayLimit, setHistoryDisplayLimit] = useState(5); // Show 5 at a time
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(null);
 
   // Reset display limit when filter or search changes
   useEffect(() => {
@@ -580,23 +582,87 @@ export default function App() {
   };
 
   const renderExercises = () => {
-    // Group exercises by type
-    const cardioExercises = exercises.filter(
-      (e) => e.type === ExerciseType.CARDIO || e.type === ExerciseType.DURATION
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    // Kategori-info med farger
+    const categoryInfo: Record<MuscleGroup, { color: string; bgColor: string; iconColor: string }> = {
+      [MuscleGroup.CHEST]: { color: 'text-red-400', bgColor: 'bg-red-500/20', iconColor: 'text-red-400' },
+      [MuscleGroup.BACK]: { color: 'text-blue-400', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-400' },
+      [MuscleGroup.SHOULDERS]: { color: 'text-purple-400', bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400' },
+      [MuscleGroup.ARMS]: { color: 'text-yellow-400', bgColor: 'bg-yellow-500/20', iconColor: 'text-yellow-400' },
+      [MuscleGroup.LEGS]: { color: 'text-green-400', bgColor: 'bg-green-500/20', iconColor: 'text-green-400' },
+      [MuscleGroup.CORE]: { color: 'text-orange-400', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-400' },
+      [MuscleGroup.CARDIO]: { color: 'text-pink-400', bgColor: 'bg-pink-500/20', iconColor: 'text-pink-400' },
+    };
 
-    const bodyweightExercises = exercises.filter(
-      (e) => e.type === ExerciseType.BODYWEIGHT
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    // Tell antall øvelser per kategori
+    const getExerciseCount = (group: MuscleGroup) => {
+      return exercises.filter(e => e.muscleGroup === group).length;
+    };
 
-    const strengthExercises = exercises.filter(
-      (e) => e.type === ExerciseType.WEIGHTED
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    // Hvis ingen kategori er valgt, vis kategorioversikten
+    if (!selectedMuscleGroup) {
+      const muscleGroups = Object.values(MuscleGroup);
+
+      return (
+        <div className="p-4 pb-24 space-y-6">
+          <div className="flex justify-between items-center mt-2 mb-4">
+            <h1 className="text-2xl font-bold text-white">Øvelser</h1>
+            <button
+              onClick={() => setIsCreatingExercise(true)}
+              className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
+            >
+              <Plus size={24} />
+            </button>
+          </div>
+
+          <p className="text-muted text-sm">Velg en muskelgruppe for å se øvelser</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            {muscleGroups.map((group) => {
+              const info = categoryInfo[group];
+              const count = getExerciseCount(group);
+
+              return (
+                <button
+                  key={group}
+                  onClick={() => setSelectedMuscleGroup(group)}
+                  className={`${info.bgColor} border border-slate-700 rounded-xl p-4 text-left hover:scale-[1.02] transition-transform active:scale-[0.98]`}
+                >
+                  <Dumbbell size={28} className={`${info.iconColor} mb-2`} />
+                  <div className={`font-bold ${info.color}`}>{group}</div>
+                  <div className="text-muted text-sm">{count} øvelser</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Vis øvelser for valgt kategori
+    const filteredExercises = exercises
+      .filter(e => e.muscleGroup === selectedMuscleGroup)
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const info = categoryInfo[selectedMuscleGroup];
 
     return (
-      <div className="p-4 pb-24 space-y-6">
-        <div className="flex justify-between items-center mt-2 mb-4">
-          <h1 className="text-2xl font-bold text-white">Øvelser</h1>
+      <div className="p-4 pb-24 space-y-4">
+        <div className="flex items-center gap-3 mt-2 mb-4">
+          <button
+            onClick={() => setSelectedMuscleGroup(null)}
+            className="bg-slate-800 p-2 rounded-full hover:bg-slate-700 transition-colors"
+          >
+            <ChevronLeft size={24} className="text-white" />
+          </button>
+          <div className="flex-1 flex items-center gap-3">
+            <Dumbbell size={24} className={info.iconColor} />
+            <div>
+              <h1 className={`text-2xl font-bold ${info.color}`}>
+                {selectedMuscleGroup}
+              </h1>
+              <p className="text-muted text-sm">{filteredExercises.length} øvelser</p>
+            </div>
+          </div>
           <button
             onClick={() => setIsCreatingExercise(true)}
             className="bg-primary text-white p-2 rounded-full shadow-lg hover:scale-105 transition-transform"
@@ -605,61 +671,20 @@ export default function App() {
           </button>
         </div>
 
-        {/* Kondisjon Section */}
-        {cardioExercises.length > 0 && (
-          <section>
-            <h2 className="text-lg font-bold text-orange-400 mb-3 flex items-center">
-              <Flame size={18} className="mr-2" />
-              Kondisjon
-            </h2>
-            <div className="space-y-3">
-              {cardioExercises.map((ex) => (
-                <ExerciseCard
-                  key={ex.id}
-                  exercise={ex}
-                  onSelect={(exercise) => setViewingExercise(exercise)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+        <div className="space-y-3">
+          {filteredExercises.map((ex) => (
+            <ExerciseCard
+              key={ex.id}
+              exercise={ex}
+              onSelect={(exercise) => setViewingExercise(exercise)}
+            />
+          ))}
+        </div>
 
-        {/* Kroppsvekt Section */}
-        {bodyweightExercises.length > 0 && (
-          <section>
-            <h2 className="text-lg font-bold text-blue-400 mb-3 flex items-center">
-              <User size={18} className="mr-2" />
-              Kroppsvekt
-            </h2>
-            <div className="space-y-3">
-              {bodyweightExercises.map((ex) => (
-                <ExerciseCard
-                  key={ex.id}
-                  exercise={ex}
-                  onSelect={(exercise) => setViewingExercise(exercise)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Styrke Section */}
-        {strengthExercises.length > 0 && (
-          <section>
-            <h2 className="text-lg font-bold text-emerald-400 mb-3 flex items-center">
-              <Dumbbell size={18} className="mr-2" />
-              Styrke
-            </h2>
-            <div className="space-y-3">
-              {strengthExercises.map((ex) => (
-                <ExerciseCard
-                  key={ex.id}
-                  exercise={ex}
-                  onSelect={(exercise) => setViewingExercise(exercise)}
-                />
-              ))}
-            </div>
-          </section>
+        {filteredExercises.length === 0 && (
+          <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
+            Ingen øvelser i denne kategorien
+          </div>
         )}
       </div>
     );
