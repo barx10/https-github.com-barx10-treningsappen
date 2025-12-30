@@ -926,7 +926,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Hold vekter ved skuldrene. Gjør en dyp knebøy, og i oppreisningen presser du vektene rett opp over hodet i én flytende bevegelse.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Thruster.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/10/thruster.gif'
   },
   {
     id: 'ex_clean_press',
@@ -935,7 +935,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.BACK, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Løft vekten fra gulvet til skuldrene (clean), deretter press den over hodet. Senk kontrollert tilbake.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Clean-and-Press.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Barbell-Clean-and-Press-.gif'
   },
   {
     id: 'ex_kettlebell_swing',
@@ -953,7 +953,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.BACK, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Start i push-up posisjon med manualer. Gjør push-up, ro med hver arm, hopp føttene frem, reis deg opp med clean og press over hodet.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Dumbbell-Man-Maker.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Burpees.gif'
   },
   {
     id: 'ex_devil_press',
@@ -962,7 +962,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CHEST, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Gjør en burpee med manualer i hendene. I oppreisningen svinger du manualene mellom beina og presser dem over hodet.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Dumbbell-Devil-Press.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2022/07/Dumbbell-Devil-Press.gif'
   },
   {
     id: 'ex_turkish_getup',
@@ -971,7 +971,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.CORE, MuscleGroup.SHOULDERS, MuscleGroup.LEGS],
     type: ExerciseType.WEIGHTED,
     description: 'Ligg på ryggen med en vekt i én hånd strukket opp. Reis deg opp til stående stilling mens du holder vekten over hodet hele veien.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Kettlebell-Turkish-Get-Up.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/04/Turkish-Get-Up-Squat-style.gif'
   },
   {
     id: 'ex_wall_ball',
@@ -980,7 +980,7 @@ export const createInitialExercises = (): ExerciseDefinition[] => [
     secondaryMuscleGroups: [MuscleGroup.LEGS, MuscleGroup.SHOULDERS, MuscleGroup.CORE],
     type: ExerciseType.WEIGHTED,
     description: 'Hold en medisinball ved brystet. Gjør en dyp knebøy, og i oppreisningen kaster du ballen opp mot et mål på veggen. Fang og gjenta.',
-    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Ball-Squat.gif'
+    imageUrl: 'https://fitnessprogramer.com/wp-content/uploads/2023/01/wall-ball.gif'
   },
 
 ].sort((a, b) => {
