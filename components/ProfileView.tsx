@@ -48,7 +48,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
         }, 300);
     };
 
-    const goalOptions = [
+    const goalOptions: { value: 'strength' | 'muscle' | 'weight_loss' | 'endurance' | 'general'; label: string; emoji: string }[] = [
         { value: 'strength', label: 'Bli sterkere', emoji: '💪' },
         { value: 'muscle', label: 'Bygge muskler', emoji: '🏋️' },
         { value: 'weight_loss', label: 'Gå ned i vekt', emoji: '📉' },

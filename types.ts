@@ -25,6 +25,9 @@ export interface ExerciseDefinition {
   description?: string; // Instructions
   imageUrl?: string; // URL to image/gif
   isCustom?: boolean;
+  personalBest?: number;
+  lastPerformed?: string;
+  totalSessions?: number;
 }
 
 export interface WorkoutSet {

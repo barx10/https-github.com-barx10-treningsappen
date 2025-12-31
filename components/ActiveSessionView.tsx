@@ -4,7 +4,8 @@ import {
   WorkoutExercise,
   ExerciseDefinition,
   WorkoutSet,
-  ExerciseType
+  ExerciseType,
+  WorkoutStatus
 } from '../types';
 import { Plus, Trash2, Check, Search, X, Clock, TrendingUp } from 'lucide-react';
 import PRCelebration from './PRCelebration';
@@ -41,7 +42,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   const personalRecords = React.useMemo(() => {
     // Include current session in history for PR calculation if it has completed sets
     const historyWithCurrent = session && session.exercises.some(ex => ex.sets.some(s => s.completed))
-      ? [...history, { ...session, status: 'Fullført' as const }]
+      ? [...history, { ...session, status: WorkoutStatus.COMPLETED }]
       : history;
     return calculatePersonalRecords(historyWithCurrent, exercises);
   }, [history, exercises, session]);
@@ -237,7 +238,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
           return (
             <div 
               key={workoutExercise.id} 
-              ref={(el) => (exerciseRefs.current[exIndex] = el)}
+              ref={(el) => { exerciseRefs.current[exIndex] = el; }}
               className={`bg-surface rounded-xl overflow-hidden border shadow-sm transition-all ${
                 isCurrent ? 'border-primary ring-2 ring-primary/50' : 'border-slate-700'
               }`}
