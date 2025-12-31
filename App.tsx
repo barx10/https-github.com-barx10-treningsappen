@@ -34,6 +34,7 @@ import ExerciseDetailModal from './components/ExerciseDetailModal';
 import ExerciseFormModal from './components/ExerciseFormModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import RecoveryInsights from './components/RecoveryInsights';
+import PinGate from './components/PinGate';
 
 // Lazy load heavy components
 const ProfileView = lazy(() => import('./components/ProfileView'));
@@ -742,10 +743,15 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   if (showSplash) {
-    return <WelcomeScreen onEnter={() => setShowSplash(false)} />;
+    return (
+      <PinGate>
+        <WelcomeScreen onEnter={() => setShowSplash(false)} />
+      </PinGate>
+    );
   }
 
   return (
+    <PinGate>
     <div className="h-screen w-full max-w-md mx-auto bg-background relative shadow-2xl font-sans overflow-hidden">
       <div className="h-full overflow-y-auto scrollbar-hide">
         {currentScreen === Screen.HOME && renderHome()}
@@ -802,5 +808,6 @@ export default function App() {
         hasActiveWorkout={!!activeSession}
       />
     </div>
+    </PinGate>
   );
 }
