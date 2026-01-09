@@ -211,77 +211,77 @@ const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile,
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4 pb-20">
+    <div className="min-h-screen bg-background p-4 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Ukesoppsummering</h1>
-          <p className="text-sm text-gray-600">Denne uken (mandag-søndag)</p>
+          <h1 className="text-2xl font-bold text-white">Ukesoppsummering</h1>
+          <p className="text-sm text-muted">Denne uken (mandag-søndag)</p>
         </div>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-white/50 rounded-full transition-colors"
+          className="p-2 hover:bg-slate-700 rounded-full transition-colors"
         >
-          <X className="w-6 h-6 text-gray-600" />
+          <X className="w-6 h-6 text-slate-400" />
         </button>
       </div>
 
       {/* Pep Talk Card */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white rounded-2xl p-6 mb-6 shadow-lg border border-slate-600">
         <div className="text-6xl mb-4 text-center">{pepTalk.emoji}</div>
         <h2 className="text-2xl font-bold text-center mb-3">{pepTalk.title}</h2>
-        <p className="text-center text-blue-50 leading-relaxed">{pepTalk.message}</p>
+        <p className="text-center text-blue-100 leading-relaxed">{pepTalk.message}</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-surface rounded-xl p-4 border border-slate-700">
           <div className="flex items-center gap-2 mb-2">
-            <Dumbbell className="w-5 h-5 text-blue-600" />
-            <span className="text-sm text-gray-600">Økter</span>
+            <Dumbbell className="w-5 h-5 text-blue-400" />
+            <span className="text-sm text-muted">Økter</span>
           </div>
-          <div className="text-3xl font-bold text-gray-800">{stats.totalWorkouts}</div>
+          <div className="text-3xl font-bold text-white">{stats.totalWorkouts}</div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-surface rounded-xl p-4 border border-slate-700">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            <span className="text-sm text-gray-600">Sett</span>
+            <TrendingUp className="w-5 h-5 text-emerald-400" />
+            <span className="text-sm text-muted">Sett</span>
           </div>
-          <div className="text-3xl font-bold text-gray-800">{stats.totalSets}</div>
+          <div className="text-3xl font-bold text-white">{stats.totalSets}</div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-surface rounded-xl p-4 border border-slate-700">
           <div className="flex items-center gap-2 mb-2">
-            <Target className="w-5 h-5 text-purple-600" />
-            <span className="text-sm text-gray-600">Volum</span>
+            <Target className="w-5 h-5 text-purple-400" />
+            <span className="text-sm text-muted">Volum</span>
           </div>
-          <div className="text-2xl font-bold text-gray-800">
+          <div className="text-2xl font-bold text-white">
             {formatNumber(Math.round(stats.totalVolume))} kg
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-surface rounded-xl p-4 border border-slate-700">
           <div className="flex items-center gap-2 mb-2">
-            <Award className="w-5 h-5 text-orange-600" />
-            <span className="text-sm text-gray-600">Øvelser</span>
+            <Award className="w-5 h-5 text-orange-400" />
+            <span className="text-sm text-muted">Øvelser</span>
           </div>
-          <div className="text-3xl font-bold text-gray-800">{stats.uniqueExercises}</div>
+          <div className="text-3xl font-bold text-white">{stats.uniqueExercises}</div>
         </div>
       </div>
 
       {/* Additional Stats */}
       {stats.avgWorkoutDuration > 0 && (
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Treningsvarighet</h3>
+        <div className="bg-surface rounded-xl p-4 mb-6 border border-slate-700">
+          <h3 className="text-sm font-semibold text-slate-300 mb-3">Treningsvarighet</h3>
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-xs text-gray-500">Gjennomsnitt</div>
-              <div className="text-xl font-bold text-gray-800">{Math.round(stats.avgWorkoutDuration)} min</div>
+              <div className="text-xs text-muted">Gjennomsnitt</div>
+              <div className="text-xl font-bold text-white">{Math.round(stats.avgWorkoutDuration)} min</div>
             </div>
             <div>
-              <div className="text-xs text-gray-500">Lengste økt</div>
-              <div className="text-xl font-bold text-gray-800">{Math.round(stats.longestWorkout)} min</div>
+              <div className="text-xs text-muted">Lengste økt</div>
+              <div className="text-xl font-bold text-white">{Math.round(stats.longestWorkout)} min</div>
             </div>
           </div>
         </div>
@@ -289,16 +289,16 @@ const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile,
 
       {/* Muscle Group Distribution */}
       {stats.muscleGroups.size > 0 && (
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Muskelgrupper trent</h3>
+        <div className="bg-surface rounded-xl p-4 mb-6 border border-slate-700">
+          <h3 className="text-sm font-semibold text-slate-300 mb-3">Muskelgrupper trent</h3>
           <div className="space-y-2">
             {Array.from(stats.muscleGroups.entries())
               .sort((a, b) => b[1] - a[1])
               .slice(0, 5)
               .map(([muscle, count]) => (
                 <div key={muscle} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">{muscle}</span>
-                  <span className="text-sm font-semibold text-blue-600">{count} øvelser</span>
+                  <span className="text-sm text-slate-300">{muscle}</span>
+                  <span className="text-sm font-semibold text-primary">{count} øvelser</span>
                 </div>
               ))}
           </div>
@@ -307,15 +307,15 @@ const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile,
 
       {/* Achievements */}
       {achievements.length > 0 && (
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Prestasjoner denne uken</h3>
+        <div className="bg-surface rounded-xl p-4 border border-slate-700">
+          <h3 className="text-sm font-semibold text-slate-300 mb-4">Prestasjoner denne uken</h3>
           <div className="grid gap-3">
             {achievements.map((achievement, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
                 {achievement.icon}
                 <div>
-                  <div className="text-sm font-semibold text-gray-800">{achievement.title}</div>
-                  <div className="text-xs text-gray-600">{achievement.description}</div>
+                  <div className="text-sm font-semibold text-white">{achievement.title}</div>
+                  <div className="text-xs text-muted">{achievement.description}</div>
                 </div>
               </div>
             ))}
@@ -325,12 +325,12 @@ const WeeklySummaryView: React.FC<WeeklySummaryViewProps> = ({ history, profile,
 
       {/* No workouts message */}
       {stats.totalWorkouts === 0 && (
-        <div className="bg-white rounded-xl p-6 shadow-sm text-center">
+        <div className="bg-surface rounded-xl p-6 border border-slate-700 text-center">
           <div className="text-4xl mb-3">💪</div>
-          <p className="text-gray-600">
+          <p className="text-slate-300">
             Ingen økter registrert siste 7 dager.
             <br />
-            <span className="text-sm">Start en ny økt og bygg momentum!</span>
+            <span className="text-sm text-muted">Start en ny økt og bygg momentum!</span>
           </p>
         </div>
       )}
