@@ -5,16 +5,82 @@ interface RestTimerProps {
     onComplete?: () => void;
 }
 
+interface TimerState {
+    timeLeft: number;
+    isRunning: boolean;
+    initialTime: number;
+    isCompact: boolean;
+    startTime: number | null;
+    remaining: number;
+}
+
+const TIMER_STORAGE_KEY = 'treningsappen_rest_timer';
+
+const loadTimerState = (): TimerState | null => {
+    try {
+        const stored = localStorage.getItem(TIMER_STORAGE_KEY);
+        if (!stored) return null;
+        const state = JSON.parse(stored);
+
+        // If timer was running, calculate elapsed time
+        if (state.isRunning && state.startTime) {
+            const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+            const newTimeLeft = Math.max(0, state.remaining - elapsed);
+
+            if (newTimeLeft === 0) {
+                // Timer has completed while away
+                return {
+                    ...state,
+                    isRunning: false,
+                    timeLeft: 0,
+                    startTime: null
+                };
+            }
+
+            return {
+                ...state,
+                timeLeft: newTimeLeft
+            };
+        }
+
+        return state;
+    } catch (e) {
+        return null;
+    }
+};
+
+const saveTimerState = (state: TimerState) => {
+    try {
+        localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+        // Ignore storage errors
+    }
+};
+
 const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
-    const [timeLeft, setTimeLeft] = useState(90); // Default 90 seconds
-    const [isRunning, setIsRunning] = useState(false);
-    const [initialTime, setInitialTime] = useState(90);
-    const [isCompact, setIsCompact] = useState(false);
+    const savedState = loadTimerState();
+
+    const [timeLeft, setTimeLeft] = useState(savedState?.timeLeft ?? 90);
+    const [isRunning, setIsRunning] = useState(savedState?.isRunning ?? false);
+    const [initialTime, setInitialTime] = useState(savedState?.initialTime ?? 90);
+    const [isCompact, setIsCompact] = useState(savedState?.isCompact ?? false);
     const audioContextRef = useRef<AudioContext | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const startTimeRef = useRef<number | null>(null);
-    const remainingRef = useRef<number>(90);
+    const startTimeRef = useRef<number | null>(savedState?.startTime ?? null);
+    const remainingRef = useRef<number>(savedState?.remaining ?? 90);
     const hasPlayedBeepsRef = useRef<Set<number>>(new Set());
+
+    // Save state to localStorage whenever it changes
+    useEffect(() => {
+        saveTimerState({
+            timeLeft,
+            isRunning,
+            initialTime,
+            isCompact,
+            startTime: startTimeRef.current,
+            remaining: remainingRef.current
+        });
+    }, [timeLeft, isRunning, initialTime, isCompact]);
 
     // Initialize AudioContext on first user interaction
     const ensureAudioContext = () => {
