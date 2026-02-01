@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Zap, TrendingUp, Calendar, AlertCircle, Loader2, RefreshCw, X } from 'lucide-react';
+import { Sparkles, Zap, TrendingUp, Calendar, AlertCircle, Loader2, RefreshCw, X, Heart } from 'lucide-react';
 import type { WorkoutSession, ExerciseDefinition, UserProfile } from '../types';
 import { loadCachedWorkout, saveCachedWorkout, clearCachedWorkout } from '../utils/storage';
 
@@ -8,6 +8,7 @@ interface AgentViewProps {
   history: WorkoutSession[];
   exercises: ExerciseDefinition[];
   onStartWorkout: (workout: GeneratedWorkout) => void;
+  onSaveFavorite?: (workout: GeneratedWorkout, name?: string) => void;
 }
 
 interface GeneratedWorkout {
@@ -24,7 +25,7 @@ interface GeneratedWorkout {
   reasoning: string;
 }
 
-const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onStartWorkout }) => {
+const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onStartWorkout, onSaveFavorite }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWorkout, setGeneratedWorkout] = useState<GeneratedWorkout | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -161,6 +162,16 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
   const startGeneratedWorkout = () => {
     if (!generatedWorkout) return;
     onStartWorkout(generatedWorkout);
+  };
+
+  const saveFavoriteWorkout = () => {
+    if (!generatedWorkout || !onSaveFavorite) return;
+
+    const name = prompt('Gi favorittøkten et navn:', generatedWorkout.name);
+    if (name === null) return; // User cancelled
+
+    onSaveFavorite(generatedWorkout, name || generatedWorkout.name);
+    alert('Økten er lagret som favoritt! 💚');
   };
 
   const handleSwapExercise = (exerciseIndex: number) => {
@@ -396,13 +407,24 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
           <div className="flex gap-3">
             <button
               onClick={startGeneratedWorkout}
-              className="flex-1 bg-secondary text-white py-4 rounded-xl font-semibold 
-                         hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 
+              className="flex-1 bg-secondary text-white py-4 rounded-xl font-semibold
+                         hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2
                          shadow-lg shadow-emerald-900/20"
             >
               <Zap size={20} />
               Start denne økten
             </button>
+            {onSaveFavorite && (
+              <button
+                onClick={saveFavoriteWorkout}
+                className="px-6 py-4 bg-gradient-to-br from-pink-600 to-rose-600 text-white rounded-xl font-semibold
+                           hover:from-pink-500 hover:to-rose-500 transition-colors flex items-center justify-center gap-2
+                           shadow-lg shadow-pink-900/20"
+                title="Lagre som favoritt"
+              >
+                <Heart size={20} />
+              </button>
+            )}
             <button
               onClick={() => generateWorkout(true)}
               disabled={isGenerating}

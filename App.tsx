@@ -8,7 +8,8 @@ import {
   ExerciseType,
   MuscleGroup,
   UserProfile,
-  BackupData
+  BackupData,
+  FavoriteWorkout
 } from './types';
 import {
   createEmptySession
@@ -21,7 +22,9 @@ import {
   loadActiveSession,
   saveActiveSession,
   loadCachedRecommendations,
-  saveCachedRecommendations
+  saveCachedRecommendations,
+  loadFavoriteWorkouts,
+  saveFavoriteWorkouts
 } from './utils/storage';
 import { loadProfile, saveProfile } from './utils/profileStorage';
 import { getTodayDateString } from './utils/dateUtils';
@@ -32,6 +35,7 @@ import WorkoutHistoryCard from './components/WorkoutHistoryCard';
 import ActiveSessionView from './components/ActiveSessionView';
 import ExerciseDetailModal from './components/ExerciseDetailModal';
 import ExerciseFormModal from './components/ExerciseFormModal';
+import FavoritesModal from './components/FavoritesModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import RecoveryInsights from './components/RecoveryInsights';
 import PinGate from './components/PinGate';
@@ -57,6 +61,7 @@ export default function App() {
   const [exercises, setExercises] = useState<ExerciseDefinition[]>(loadExercises);
   const [history, setHistory] = useState<WorkoutSession[]>(loadHistory);
   const [profile, setProfile] = useState<UserProfile>(loadProfile);
+  const [favoriteWorkouts, setFavoriteWorkouts] = useState<FavoriteWorkout[]>(loadFavoriteWorkouts);
   const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadingAiRecommendations, setLoadingAiRecommendations] = useState(false);
@@ -89,10 +94,15 @@ export default function App() {
     saveProfile(profile);
   }, [profile]);
 
+  useEffect(() => {
+    saveFavoriteWorkouts(favoriteWorkouts);
+  }, [favoriteWorkouts]);
+
   // Modals State
   const [viewingExercise, setViewingExercise] = useState<ExerciseDefinition | null>(null);
   const [isCreatingExercise, setIsCreatingExercise] = useState(false);
   const [exerciseToEdit, setExerciseToEdit] = useState<ExerciseDefinition | undefined>(undefined);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
 
   // --- Actions ---
 
@@ -219,6 +229,74 @@ export default function App() {
 
   const handleDeleteHistory = (sessionId: string) => {
     setHistory(history.filter(s => s.id !== sessionId));
+  };
+
+  const handleSaveFavoriteWorkout = (workout: any, name?: string) => {
+    const favoriteWorkout: FavoriteWorkout = {
+      id: crypto.randomUUID(),
+      name: name || workout.name || 'Favoritt økt',
+      exercises: workout.exercises.map((ex: any) => {
+        const exercise = exercises.find(e => e.id === ex.exerciseId);
+        if (!exercise) return null;
+
+        const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
+        const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
+
+        return {
+          id: crypto.randomUUID(),
+          exerciseDefinitionId: exercise.id,
+          sets: Array(ex.sets || 3).fill(null).map(() => ({
+            id: crypto.randomUUID(),
+            weight: 0,
+            reps: isCardio ? 0 : repsValue,
+            durationMinutes: isCardio ? 10 : 0,
+            completed: false,
+          })),
+          notes: ex.notes || `${ex.reps} reps, ${ex.restTime}s hvile`,
+        };
+      }).filter((ex: WorkoutExercise | null) => ex !== null),
+      createdDate: new Date().toISOString(),
+      description: workout.description,
+      focusAreas: workout.focusAreas,
+      estimatedDuration: workout.estimatedDuration,
+      timesUsed: 0,
+    };
+
+    setFavoriteWorkouts([favoriteWorkout, ...favoriteWorkouts]);
+  };
+
+  const handleDeleteFavoriteWorkout = (id: string) => {
+    setFavoriteWorkouts(favoriteWorkouts.filter(f => f.id !== id));
+  };
+
+  const handleStartFavoriteWorkout = (favorite: FavoriteWorkout) => {
+    const newSession: WorkoutSession = {
+      id: crypto.randomUUID(),
+      name: favorite.name,
+      date: getTodayDateString(),
+      startTime: new Date().toISOString(),
+      status: WorkoutStatus.ACTIVE,
+      exercises: favorite.exercises.map(ex => ({
+        ...ex,
+        id: crypto.randomUUID(),
+        sets: ex.sets.map(set => ({
+          ...set,
+          id: crypto.randomUUID(),
+          completed: false,
+        })),
+      })),
+    };
+
+    // Increment times used
+    setFavoriteWorkouts(favoriteWorkouts.map(f =>
+      f.id === favorite.id
+        ? { ...f, timesUsed: (f.timesUsed || 0) + 1 }
+        : f
+    ));
+
+    setActiveSession(newSession);
+    setCurrentScreen(Screen.ACTIVE_WORKOUT);
+    setShowFavoritesModal(false);
   };
 
   const handleImportData = (data: Partial<BackupData>) => {
@@ -427,6 +505,65 @@ export default function App() {
                 </button>
               </div>
             )}
+          </section>
+        )}
+
+        {/* Favorite Workouts Section */}
+        {favoriteWorkouts.length > 0 && (
+          <section>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Heart size={20} className="text-pink-500" fill="currentColor" />
+                Mine favorittøkter
+              </h2>
+              <button
+                onClick={() => setShowFavoritesModal(true)}
+                className="text-sm text-primary hover:text-primary/80 font-medium"
+              >
+                Se alle ({favoriteWorkouts.length})
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {favoriteWorkouts.slice(0, 3).map((favorite) => (
+                <div
+                  key={favorite.id}
+                  className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-4 rounded-xl border border-slate-700/50 hover:border-pink-500/30 transition-all group"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white text-base mb-1 group-hover:text-pink-400 transition-colors">
+                        {favorite.name}
+                      </h3>
+                      <div className="flex gap-3 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Dumbbell size={12} className="text-emerald-500" />
+                          {favorite.exercises.length} øvelser
+                        </span>
+                        {favorite.estimatedDuration && (
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} className="text-blue-500" />
+                            ~{favorite.estimatedDuration} min
+                          </span>
+                        )}
+                        {favorite.timesUsed !== undefined && favorite.timesUsed > 0 && (
+                          <span className="flex items-center gap-1">
+                            <TrendingUp size={12} className="text-purple-500" />
+                            {favorite.timesUsed}x
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleStartFavoriteWorkout(favorite)}
+                    className="w-full bg-secondary text-white py-2.5 px-4 rounded-lg font-medium hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20"
+                  >
+                    <Zap size={16} />
+                    Start denne økta
+                  </button>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
@@ -771,6 +908,7 @@ export default function App() {
               history={history}
               exercises={exercises}
               onStartWorkout={handleStartGeneratedWorkout}
+              onSaveFavorite={handleSaveFavoriteWorkout}
             />
           </Suspense>
         )}
@@ -799,6 +937,16 @@ export default function App() {
             setIsCreatingExercise(false);
             setExerciseToEdit(undefined);
           }}
+        />
+      )}
+
+      {showFavoritesModal && (
+        <FavoritesModal
+          favorites={favoriteWorkouts}
+          exercises={exercises}
+          onClose={() => setShowFavoritesModal(false)}
+          onStartWorkout={handleStartFavoriteWorkout}
+          onDeleteFavorite={handleDeleteFavoriteWorkout}
         />
       )}
 

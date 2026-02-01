@@ -1,4 +1,4 @@
-import { ExerciseDefinition, WorkoutSession } from '../types';
+import { ExerciseDefinition, WorkoutSession, FavoriteWorkout } from '../types';
 import { createInitialExercises, createInitialHistory } from './initialData';
 import { STORAGE_KEYS } from './storageKeys';
 
@@ -229,6 +229,27 @@ export const clearCachedRecommendations = () => {
         window.localStorage.removeItem(STORAGE_KEYS.AI_RECOMMENDATIONS_CACHE);
     } catch (error) {
         console.error('Failed to clear cached recommendations', error);
+    }
+};
+
+// Favorite Workouts
+export const loadFavoriteWorkouts = (): FavoriteWorkout[] => {
+    if (!hasStorage()) return [];
+    try {
+        const stored = window.localStorage.getItem(STORAGE_KEYS.FAVORITE_WORKOUTS);
+        return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+        console.error('Failed to load favorite workouts', error);
+        return [];
+    }
+};
+
+export const saveFavoriteWorkouts = (favorites: FavoriteWorkout[]) => {
+    if (!hasStorage()) return;
+    try {
+        window.localStorage.setItem(STORAGE_KEYS.FAVORITE_WORKOUTS, JSON.stringify(favorites));
+    } catch (error) {
+        console.error('Failed to save favorite workouts', error);
     }
 };
 

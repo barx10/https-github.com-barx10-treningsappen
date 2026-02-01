@@ -83,6 +83,18 @@ export interface UserProfile {
   goal?: 'strength' | 'muscle' | 'weight_loss' | 'endurance' | 'general';
 }
 
+// Favorite Workouts
+export interface FavoriteWorkout {
+  id: string;
+  name: string;
+  exercises: WorkoutExercise[];
+  createdDate: string;
+  description?: string;
+  focusAreas?: string[];
+  estimatedDuration?: number; // minutes
+  timesUsed?: number;
+}
+
 export interface BackupData {
   profile: UserProfile;
   exercises: ExerciseDefinition[];
