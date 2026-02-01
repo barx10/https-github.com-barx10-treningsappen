@@ -116,8 +116,8 @@ const WorkoutHistoryCard: React.FC<WorkoutHistoryCardProps> = ({ session, exerci
 
       {/* Detail Modal */}
       {isExpanded && (
-        <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm overflow-y-auto">
-          <div className="min-h-screen p-4 flex items-start justify-center pt-8">
+        <div className="fixed inset-0 z-[60] bg-slate-900/95 backdrop-blur-sm overflow-y-auto">
+          <div className="min-h-screen p-4 pb-24 flex items-start justify-center pt-8">
             <div className="bg-surface rounded-2xl border border-slate-700 w-full max-w-2xl shadow-2xl">
               {/* Header */}
               <div className="p-6 border-b border-slate-700 flex justify-between items-start">
