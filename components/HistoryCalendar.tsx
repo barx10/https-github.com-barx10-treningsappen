@@ -8,9 +8,10 @@ interface HistoryCalendarProps {
   exercises: ExerciseDefinition[];
   userWeight?: number;
   onDelete: (sessionId: string) => void;
+  onSaveAsFavorite?: (session: WorkoutSession) => void;
 }
 
-const HistoryCalendar: React.FC<HistoryCalendarProps> = ({ history, exercises, userWeight, onDelete }) => {
+const HistoryCalendar: React.FC<HistoryCalendarProps> = ({ history, exercises, userWeight, onDelete, onSaveAsFavorite }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -211,6 +212,7 @@ const HistoryCalendar: React.FC<HistoryCalendarProps> = ({ history, exercises, u
                   exercises={exercises}
                   userWeight={userWeight}
                   onDelete={onDelete}
+                  onSaveAsFavorite={onSaveAsFavorite}
                 />
               ))}
             </div>

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { WorkoutSession, ExerciseDefinition } from '../types';
-import { Calendar, Clock, Dumbbell, Trash2, Flame, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Calendar, Clock, Dumbbell, Trash2, Flame, ChevronDown, ChevronUp, X, Heart } from 'lucide-react';
 import { calculateCaloriesBurned } from '../utils/fitnessCalculations';
 
 interface WorkoutHistoryCardProps {
@@ -8,9 +8,10 @@ interface WorkoutHistoryCardProps {
   exercises?: ExerciseDefinition[];
   userWeight?: number;
   onDelete?: (id: string) => void;
+  onSaveAsFavorite?: (session: WorkoutSession) => void;
 }
 
-const WorkoutHistoryCard: React.FC<WorkoutHistoryCardProps> = ({ session, exercises, userWeight, onDelete }) => {
+const WorkoutHistoryCard: React.FC<WorkoutHistoryCardProps> = ({ session, exercises, userWeight, onDelete, onSaveAsFavorite }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const duration = useMemo(() => {
@@ -207,7 +208,19 @@ const WorkoutHistoryCard: React.FC<WorkoutHistoryCardProps> = ({ session, exerci
               </div>
 
               {/* Footer */}
-              <div className="p-6 border-t border-slate-700 flex justify-end">
+              <div className="p-6 border-t border-slate-700 flex justify-between">
+                {onSaveAsFavorite && (
+                  <button
+                    onClick={() => {
+                      onSaveAsFavorite(session);
+                      setIsExpanded(false);
+                    }}
+                    className="px-6 py-3 bg-gradient-to-br from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg shadow-pink-900/20"
+                  >
+                    <Heart size={18} />
+                    Lagre som favoritt
+                  </button>
+                )}
                 <button
                   onClick={() => setIsExpanded(false)}
                   className="px-6 py-3 bg-primary hover:bg-emerald-500 text-white rounded-xl font-medium transition-colors"
