@@ -7,7 +7,7 @@ import {
   ExerciseType,
   WorkoutStatus
 } from '../types';
-import { Plus, Trash2, Check, Search, X, Clock, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, Check, Search, X, Clock, TrendingUp, Heart } from 'lucide-react';
 import PRCelebration from './PRCelebration';
 import { calculatePersonalRecords, checkPRStatus } from '../utils/prTracking';
 import RestTimer from './RestTimer';
@@ -20,6 +20,7 @@ interface ActiveSessionViewProps {
   onFinishSession: () => void;
   onCancelSession: () => void;
   onRequestCreateExercise: () => void;
+  onSaveAsFavorite?: (session: WorkoutSession) => void;
 }
 
 const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
@@ -29,7 +30,8 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   onUpdateSession,
   onFinishSession,
   onCancelSession,
-  onRequestCreateExercise
+  onRequestCreateExercise,
+  onSaveAsFavorite
 }) => {
   const [isExerciseModalOpen, setExerciseModalOpen] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -213,12 +215,23 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
               {formatTime(elapsedTime)}
             </div>
           </div>
-          <button
-            onClick={onFinishSession}
-            className="bg-secondary text-surface px-5 py-2 rounded-full font-bold text-sm hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-900/20"
-          >
-            Fullfør Økt
-          </button>
+          <div className="flex gap-2">
+            {onSaveAsFavorite && (
+              <button
+                onClick={() => onSaveAsFavorite(session)}
+                className="bg-gradient-to-br from-pink-600 to-rose-600 text-white p-2 rounded-full hover:from-pink-500 hover:to-rose-500 transition-all shadow-lg shadow-pink-900/20"
+                title="Lagre som favoritt"
+              >
+                <Heart size={18} />
+              </button>
+            )}
+            <button
+              onClick={onFinishSession}
+              className="bg-secondary text-surface px-5 py-2 rounded-full font-bold text-sm hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-900/20"
+            >
+              Fullfør Økt
+            </button>
+          </div>
         </div>
         <div className="px-4 pb-3">
           <RestTimer />

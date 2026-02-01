@@ -265,6 +265,30 @@ export default function App() {
     setFavoriteWorkouts([favoriteWorkout, ...favoriteWorkouts]);
   };
 
+  const handleSaveSessionAsFavorite = (session: WorkoutSession) => {
+    const name = prompt('Gi favorittøkten et navn:', session.name);
+    if (name === null) return; // User cancelled
+
+    const favoriteWorkout: FavoriteWorkout = {
+      id: crypto.randomUUID(),
+      name: name || session.name,
+      exercises: session.exercises.map(ex => ({
+        ...ex,
+        id: crypto.randomUUID(),
+        sets: ex.sets.map(set => ({
+          ...set,
+          id: crypto.randomUUID(),
+          completed: false, // Reset completion status
+        })),
+      })),
+      createdDate: new Date().toISOString(),
+      timesUsed: 0,
+    };
+
+    setFavoriteWorkouts([favoriteWorkout, ...favoriteWorkouts]);
+    alert('Økten er lagret som favoritt! 💚');
+  };
+
   const handleDeleteFavoriteWorkout = (id: string) => {
     setFavoriteWorkouts(favoriteWorkouts.filter(f => f.id !== id));
   };
@@ -703,11 +727,12 @@ export default function App() {
         {/* Calendar View */}
         <Suspense fallback={<div className="h-96 bg-surface rounded-xl animate-pulse" />}>
           {filteredHistory.length > 0 ? (
-            <HistoryCalendar 
-              history={filteredHistory} 
-              exercises={exercises} 
+            <HistoryCalendar
+              history={filteredHistory}
+              exercises={exercises}
               userWeight={profile.weight}
               onDelete={handleDeleteHistory}
+              onSaveAsFavorite={handleSaveSessionAsFavorite}
             />
           ) : (
             <div className="p-8 text-center border border-dashed border-slate-700 rounded-xl text-muted">
@@ -860,6 +885,7 @@ export default function App() {
         onFinishSession={handleFinishSession}
         onCancelSession={handleCancelSession}
         onRequestCreateExercise={() => setIsCreatingExercise(true)}
+        onSaveAsFavorite={handleSaveSessionAsFavorite}
       />
     );
   };
