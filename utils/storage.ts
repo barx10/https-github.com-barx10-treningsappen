@@ -253,3 +253,63 @@ export const saveFavoriteWorkouts = (favorites: FavoriteWorkout[]) => {
     }
 };
 
+// Sync state helpers
+export const loadLastSyncAt = (): string | null => {
+    if (!hasStorage()) return null;
+    try {
+        return window.localStorage.getItem(STORAGE_KEYS.LAST_SYNC_AT);
+    } catch {
+        return null;
+    }
+};
+
+export const saveLastSyncAt = (isoDate: string) => {
+    if (!hasStorage()) return;
+    try {
+        window.localStorage.setItem(STORAGE_KEYS.LAST_SYNC_AT, isoDate);
+    } catch (error) {
+        console.error('Failed to save last sync date', error);
+    }
+};
+
+export const loadSyncPending = (): boolean => {
+    if (!hasStorage()) return false;
+    try {
+        return window.localStorage.getItem(STORAGE_KEYS.SYNC_PENDING) === 'true';
+    } catch {
+        return false;
+    }
+};
+
+export const saveSyncPending = (pending: boolean) => {
+    if (!hasStorage()) return;
+    try {
+        if (pending) {
+            window.localStorage.setItem(STORAGE_KEYS.SYNC_PENDING, 'true');
+        } else {
+            window.localStorage.removeItem(STORAGE_KEYS.SYNC_PENDING);
+        }
+    } catch (error) {
+        console.error('Failed to save sync pending flag', error);
+    }
+};
+
+// Last export date helpers
+export const loadLastExportDate = (): string | null => {
+    if (!hasStorage()) return null;
+    try {
+        return window.localStorage.getItem(STORAGE_KEYS.LAST_EXPORT_DATE);
+    } catch {
+        return null;
+    }
+};
+
+export const saveLastExportDate = (isoDate: string) => {
+    if (!hasStorage()) return;
+    try {
+        window.localStorage.setItem(STORAGE_KEYS.LAST_EXPORT_DATE, isoDate);
+    } catch (error) {
+        console.error('Failed to save last export date', error);
+    }
+};
+
