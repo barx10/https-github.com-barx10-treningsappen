@@ -91,7 +91,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                             <CheckCircle size={36} className="text-emerald-400 mx-auto mb-2" />
                             <p className="text-white font-medium">Sjekk e-posten din</p>
                             <p className="text-muted text-sm mt-1">
-                                Vi sendte en 6-sifret kode til{' '}
+                                Vi sendte en 8-sifret kode til{' '}
                                 <span className="text-white">{email}</span>.
                                 Skriv den inn her.
                             </p>
@@ -102,10 +102,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                                 type="text"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
-                                maxLength={6}
+                                maxLength={8}
                                 value={code}
                                 onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-                                placeholder="123456"
+                                placeholder="12345678"
                                 required
                                 autoFocus
                                 className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors text-center text-xl tracking-widest"
@@ -114,7 +114,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
                         {error && <p className="text-red-400 text-sm">{error}</p>}
                         <button
                             type="submit"
-                            disabled={loading || code.length < 6}
+                            disabled={loading || code.length < 8}
                             className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? <Loader2 size={16} className="animate-spin" /> : null}
