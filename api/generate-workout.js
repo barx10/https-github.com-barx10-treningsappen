@@ -179,7 +179,7 @@ Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
       console.log('Calling Gemini API...');
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const result = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-lite',
+        model: 'gemini-3.1-flash-lite-preview',
         contents: { parts: [{ text: prompt }] },
         config: {
           responseMimeType: 'application/json'

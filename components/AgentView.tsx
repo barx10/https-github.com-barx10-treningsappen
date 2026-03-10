@@ -265,7 +265,7 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
         {/* AI Model Info */}
         <div className="flex items-center gap-2 pt-2 text-[10px] text-slate-600">
           <Sparkles size={10} />
-          <span>Modell: gemini-3.1-flash-lite</span>
+          <span>Modell: gemini-3.1-flash-lite-preview</span>
         </div>
       </div>
 
