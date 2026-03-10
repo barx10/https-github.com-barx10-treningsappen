@@ -209,7 +209,7 @@ Vær kreativ, personlig og gi tips som virkelig hjelper brukeren å nå målet s
             console.log('Calling Gemini API for recommendations...');
             const ai = new GoogleGenAI({ apiKey });
             const result = await ai.models.generateContent({
-                model: 'gemini-3.1-flash-lite',
+                model: 'gemini-3.1-flash-lite-preview',
                 contents: { parts: [{ text: prompt }] },
                 config: {
                     responseMimeType: 'application/json'
