@@ -57,7 +57,7 @@ const HistoryOverviewChart = lazy(() => import('./components/HistoryOverviewChar
 const ExerciseDistributionChart = lazy(() => import('./components/ExerciseDistributionChart'));
 const HistoryCalendar = lazy(() => import('./components/HistoryCalendar'));
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
-import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock, ChevronLeft } from 'lucide-react';
+import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock, ChevronLeft, Zap } from 'lucide-react';
 
 export default function App() {
   // --- State ---
