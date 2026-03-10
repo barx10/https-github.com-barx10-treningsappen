@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { UserProfile, WorkoutSession, ExerciseDefinition, BackupData } from '../types';
-import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload, X, Calendar } from 'lucide-react';
+import { UserProfile, WorkoutSession, ExerciseDefinition, BackupData, SyncStatus } from '../types';
+import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload, X, Calendar, Cloud, LogOut, LogIn } from 'lucide-react';
 import { getStrengthStandard } from '../utils/fitnessCalculations';
 import WeeklySummaryView from './WeeklySummaryView';
+import SyncStatusIndicator from './SyncStatusIndicator';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface ProfileViewProps {
     profile: UserProfile;
@@ -11,9 +13,13 @@ interface ProfileViewProps {
     exercises?: ExerciseDefinition[];
     activeSession?: WorkoutSession | null;
     onImportData?: (data: Partial<BackupData>) => void;
+    authUser?: SupabaseUser | null;
+    syncStatus?: SyncStatus;
+    onShowAuthModal?: () => void;
+    onSignOut?: () => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, history, exercises, activeSession, onImportData }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, history, exercises, activeSession, onImportData, authUser, syncStatus = 'idle', onShowAuthModal, onSignOut }) => {
     const [name, setName] = useState(profile.name || '');
     const [age, setAge] = useState(profile.age?.toString() || '');
     const [weight, setWeight] = useState(profile.weight?.toString() || '');
@@ -517,14 +523,51 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                 </p>
             </div>
 
+            {/* Cloud Sync Section */}
+            <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Cloud size={18} className="text-emerald-400" />
+                    Sky-backup
+                    <SyncStatusIndicator status={syncStatus} isLoggedIn={!!authUser} />
+                </h2>
+                {authUser ? (
+                    <div className="space-y-3">
+                        <p className="text-xs text-muted">
+                            Logget inn som <span className="text-white">{authUser.email}</span>.
+                            Dataene dine synkroniseres automatisk etter hver økt.
+                        </p>
+                        <button
+                            onClick={onSignOut}
+                            className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <LogOut size={16} />
+                            Logg ut
+                        </button>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        <p className="text-xs text-muted">
+                            Logg inn for å aktivere automatisk sky-syncing. Dataene dine lagres trygt og synkes på tvers av enheter.
+                        </p>
+                        <button
+                            onClick={onShowAuthModal}
+                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <LogIn size={16} />
+                            Logg inn / Registrer deg
+                        </button>
+                    </div>
+                )}
+            </div>
+
             {/* Backup & Restore Section */}
             <div className="bg-surface rounded-xl border border-slate-700 p-5 space-y-4">
                 <h2 className="text-lg font-bold text-white flex items-center">
                     <Download size={18} className="mr-2 text-blue-400" />
-                    Backup & Gjenopprett
+                    Lokal Backup & Gjenopprett
                 </h2>
                 <p className="text-xs text-muted">
-                    Sikkerhetskopier all data (profil, øvelser, historikk) eller gjenopprett fra tidligere backup.
+                    Manuell sikkerhetskopi til fil (JSON eksporteres automatisk etter hver økt).
                 </p>
 
                 <div className="flex gap-3">

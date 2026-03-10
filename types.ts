@@ -100,4 +100,7 @@ export interface BackupData {
   exercises: ExerciseDefinition[];
   history: WorkoutSession[];
   activeSession: WorkoutSession | null;
+  exportDate?: string;
 }
+
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error' | 'offline';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   ExerciseDefinition,
   WorkoutSession,
@@ -9,7 +9,8 @@ import {
   MuscleGroup,
   UserProfile,
   BackupData,
-  FavoriteWorkout
+  FavoriteWorkout,
+  SyncStatus
 } from './types';
 import {
   createEmptySession
@@ -24,12 +25,20 @@ import {
   loadCachedRecommendations,
   saveCachedRecommendations,
   loadFavoriteWorkouts,
-  saveFavoriteWorkouts
+  saveFavoriteWorkouts,
+  loadSyncPending,
+  saveSyncPending,
 } from './utils/storage';
 import { loadProfile, saveProfile } from './utils/profileStorage';
+import { supabase } from './utils/supabaseClient';
+import { syncAll, mergeCloudIntoLocal } from './utils/syncService';
+import { exportJSON } from './utils/autoExport';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { getTodayDateString } from './utils/dateUtils';
 import { calculateWeeklyVolume } from './utils/fitnessCalculations';
 import BottomNav from './components/BottomNav';
+import AuthModal from './components/AuthModal';
+import SyncStatusIndicator from './components/SyncStatusIndicator';
 import ExerciseCard from './components/ExerciseCard';
 import WorkoutHistoryCard from './components/WorkoutHistoryCard';
 import ActiveSessionView from './components/ActiveSessionView';
@@ -70,6 +79,12 @@ export default function App() {
   const [historyDisplayLimit, setHistoryDisplayLimit] = useState(5); // Show 5 at a time
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(null);
 
+  // Auth + Sync state
+  const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const hasMergedRef = useRef(false);
+
   // Reset display limit when filter or search changes
   useEffect(() => {
     setHistoryDisplayLimit(5);
@@ -97,6 +112,55 @@ export default function App() {
   useEffect(() => {
     saveFavoriteWorkouts(favoriteWorkouts);
   }, [favoriteWorkouts]);
+
+  // Auth listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthUser(data.session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // On first sign-in: merge cloud data into local state
+  useEffect(() => {
+    if (!authUser || hasMergedRef.current) return;
+    hasMergedRef.current = true;
+    setSyncStatus('syncing');
+    mergeCloudIntoLocal(
+      { profile, exercises, history, favorites: favoriteWorkouts },
+      authUser.id
+    ).then(merged => {
+      if (merged.profile) setProfile(merged.profile);
+      if (merged.history) setHistory(merged.history);
+      if (merged.exercises) setExercises(merged.exercises);
+      if (merged.favorites) setFavoriteWorkouts(merged.favorites);
+      setSyncStatus('synced');
+    }).catch(() => setSyncStatus('error'));
+  }, [authUser]);
+
+  // Background sync helper
+  const triggerSync = (state: { profile: UserProfile; exercises: ExerciseDefinition[]; history: WorkoutSession[]; favorites: FavoriteWorkout[] }) => {
+    if (!authUser) return;
+    if (!navigator.onLine) { saveSyncPending(true); setSyncStatus('offline'); return; }
+    setSyncStatus('syncing');
+    syncAll(state, authUser.id)
+      .then(() => setSyncStatus('synced'))
+      .catch(() => { setSyncStatus('error'); saveSyncPending(true); });
+  };
+
+  // Flush pending sync when back online
+  useEffect(() => {
+    const handleOnline = () => {
+      if (authUser && loadSyncPending()) {
+        triggerSync({ profile, exercises, history, favorites: favoriteWorkouts });
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [authUser, profile, exercises, history, favoriteWorkouts]);
 
   // Modals State
   const [viewingExercise, setViewingExercise] = useState<ExerciseDefinition | null>(null);
@@ -129,9 +193,16 @@ export default function App() {
       status: WorkoutStatus.COMPLETED
     };
 
-    setHistory([completedSession, ...history]);
+    const newHistory = [completedSession, ...history];
+    setHistory(newHistory);
     setActiveSession(null);
     setCurrentScreen(Screen.HISTORY);
+
+    // Auto-export JSON backup after every completed workout
+    exportJSON({ profile, exercises, history: newHistory, activeSession: null });
+
+    // Sync to cloud if logged in
+    triggerSync({ profile, exercises, history: newHistory, favorites: favoriteWorkouts });
   };
 
   const handleCancelSession = () => {
@@ -894,11 +965,15 @@ export default function App() {
     <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
       <ProfileView
         profile={profile}
-        onUpdateProfile={setProfile}
+        onUpdateProfile={(p) => { setProfile(p); triggerSync({ profile: p, exercises, history, favorites: favoriteWorkouts }); }}
         history={history}
         exercises={exercises}
         activeSession={activeSession}
         onImportData={handleImportData}
+        authUser={authUser}
+        syncStatus={syncStatus}
+        onShowAuthModal={() => setShowAuthModal(true)}
+        onSignOut={async () => { await supabase.auth.signOut(); setAuthUser(null); hasMergedRef.current = false; setSyncStatus('idle'); }}
       />
     </Suspense>
   );
@@ -981,6 +1056,9 @@ export default function App() {
         onNavigate={setCurrentScreen}
         hasActiveWorkout={!!activeSession}
       />
+
+      {/* Auth Modal */}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
     </PinGate>
   );
