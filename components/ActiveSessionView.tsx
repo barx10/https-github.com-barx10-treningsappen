@@ -55,7 +55,9 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
     const interval = setInterval(() => {
       const start = new Date(session.startTime).getTime();
       const now = new Date().getTime();
-      setElapsedTime(Math.floor((now - start) / 1000));
+      const elapsed = Math.floor((now - start) / 1000);
+      // Cap at 12 hours to avoid runaway timer for past-dated sessions
+      setElapsedTime(Math.min(elapsed, 12 * 3600));
     }, 1000);
     return () => clearInterval(interval);
   }, [session]);

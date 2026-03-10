@@ -32,7 +32,7 @@ import {
 import { loadProfile, saveProfile } from './utils/profileStorage';
 import { supabase } from './utils/supabaseClient';
 import { syncAll, mergeCloudIntoLocal } from './utils/syncService';
-import { exportJSON } from './utils/autoExport';
+import { exportJSON, isExportDue } from './utils/autoExport';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { getTodayDateString } from './utils/dateUtils';
 import { calculateWeeklyVolume } from './utils/fitnessCalculations';
@@ -198,8 +198,12 @@ export default function App() {
     setActiveSession(null);
     setCurrentScreen(Screen.HISTORY);
 
-    // Auto-export JSON backup after every completed workout
-    exportJSON({ profile, exercises, history: newHistory, activeSession: null });
+    // Auto-export JSON backup only when due, deferred to avoid blocking navigation
+    if (isExportDue()) {
+      setTimeout(() => {
+        exportJSON({ profile, exercises, history: newHistory, activeSession: null });
+      }, 500);
+    }
 
     // Sync to cloud if logged in
     triggerSync({ profile, exercises, history: newHistory, favorites: favoriteWorkouts });
