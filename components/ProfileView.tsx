@@ -4,6 +4,7 @@ import { User, Target, TrendingUp, Save, Dumbbell, Trophy, Download, Upload, X, 
 import { getStrengthStandard } from '../utils/fitnessCalculations';
 import WeeklySummaryView from './WeeklySummaryView';
 import SyncStatusIndicator from './SyncStatusIndicator';
+import { isSupabaseConfigured } from '../utils/supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface ProfileViewProps {
@@ -530,7 +531,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                     Sky-backup
                     <SyncStatusIndicator status={syncStatus} isLoggedIn={!!authUser} />
                 </h2>
-                {authUser ? (
+                {!isSupabaseConfigured ? (
+                    <p className="text-xs text-amber-400">
+                        Sky-backup krever at miljøvariablene <code>VITE_SUPABASE_URL</code> og <code>VITE_SUPABASE_KEY</code> er satt i Vercel.
+                    </p>
+                ) : authUser ? (
                     <div className="space-y-3">
                         <p className="text-xs text-muted">
                             Logget inn som <span className="text-white">{authUser.email}</span>.
