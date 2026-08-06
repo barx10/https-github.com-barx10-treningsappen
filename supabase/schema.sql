@@ -1,49 +1,60 @@
 -- Treningsappen – Supabase-skjema
 --
--- Kjør hele denne filen i Supabase → SQL Editor. Den er idempotent, så du kan
--- kjøre den på nytt uten å miste data.
+-- Dette er en tro kopi av databasen i prosjektet «treningsappen», avstemt mot
+-- information_schema.columns og pg_policies. Endrer du noe i Supabase-
+-- dashboardet, oppdater denne filen også.
 --
--- Tabellene her er de fire som utils/syncService.ts snakker med:
+-- Filen er idempotent: `create table if not exists` rører ikke eksisterende
+-- tabeller, og policyene droppes før de opprettes på nytt. Kjør den i
+-- Supabase → SQL Editor.
+--
+-- Tabellene er de fire som utils/syncService.ts snakker med:
 --   profiles, exercises, workout_sessions, favorite_workouts
 --
--- Merk om id-kolonnene: de er `text`, ikke `uuid`. Egendefinerte øvelser får
--- id på formen `custom_<uuid>` (se components/ExerciseFormModal.tsx), og
--- eksempeløkta fra initialData.ts har id `past_session_1`. Med uuid-kolonner
--- ville de feile med "invalid input syntax for type uuid".
+-- Om id-kolonnene: de er `text`, ikke `uuid`. Egendefinerte øvelser får id på
+-- formen `custom_<uuid>` (components/ExerciseFormModal.tsx), og eksempeløkta
+-- fra initialData.ts har id `past_session_1`. Med uuid-kolonner ville de feile
+-- med "invalid input syntax for type uuid".
 --
--- Filen speiler databasen slik den står i prosjektet «treningsappen». Endrer du
--- noe i Supabase-dashboardet, oppdater denne filen også.
+-- To detaljer er utledet, ikke avlest, siden de ikke vises i kolonnelista:
+--   * unique på profiles.user_id – pushProfile gjør upsert med
+--     onConflict 'user_id', som krever en unik indeks der for å fungere
+--   * `on delete cascade` på fremmednøklene – relasjonene til auth.users finnes
+--     (vises i Table Editor), men slettereglene er ikke verifisert
 
 -- ── profiles ──────────────────────────────────────────────────────────────────
--- Egen `id` som primærnøkkel, og `user_id` unik: klienten gjør upsert med
--- onConflict 'user_id' og sender aldri `id`, så id må ha default.
+-- Egen `id` som primærnøkkel med default: klienten sender aldri `id`, kun
+-- user_id, og lener seg på onConflict 'user_id' for å treffe samme rad igjen.
 create table if not exists public.profiles (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null unique references auth.users (id) on delete cascade,
-  name       text,
+  name       text not null,
   age        integer,
   weight     numeric,
-  height     numeric,
+  height     integer,
   gender     text,
   goal       text,
-  updated_at timestamptz not null default now()
+  updated_at timestamptz default now()
 );
 
 -- ── exercises (kun egendefinerte øvelser synkes) ──────────────────────────────
 -- Sammensatt primærnøkkel fordi klienten gjør upsert med onConflict 'id,user_id'.
+-- Merk: is_custom har default false, mens pullExercises filtrerer på
+-- is_custom = true. Rader satt inn uten feltet blir derfor usynlige for appen.
+-- pushExercises sender alltid true, så det gjelder bare manuelle innsettinger.
 create table if not exists public.exercises (
   id                      text not null,
   user_id                 uuid not null references auth.users (id) on delete cascade,
   name                    text not null,
-  muscle_group            text,
-  secondary_muscle_groups text[] not null default '{}',
-  type                    text,
+  muscle_group            text not null,
+  secondary_muscle_groups text[],
+  type                    text not null,
   description             text,
-  is_custom               boolean not null default true,
+  is_custom               boolean default false,
   personal_best           numeric,
   last_performed          text,
-  total_sessions          integer not null default 0,
-  updated_at              timestamptz not null default now(),
+  total_sessions          integer default 0,
+  updated_at              timestamptz default now(),
   primary key (id, user_id)
 );
 
@@ -51,16 +62,17 @@ create index if not exists exercises_user_id_idx on public.exercises (user_id);
 
 -- ── workout_sessions ──────────────────────────────────────────────────────────
 -- Øvelsene i en økt lagres som jsonb (samme form som WorkoutExercise[] i types.ts).
+-- `date` er text fordi feltet inneholder både «2025-12-21» og hele ISO-strenger.
 create table if not exists public.workout_sessions (
   id             text primary key,
   user_id        uuid not null references auth.users (id) on delete cascade,
   name           text not null,
   date           text not null,
-  start_time     timestamptz,
+  start_time     timestamptz not null,
   end_time       timestamptz,
-  status         text,
-  exercises_json jsonb not null default '[]'::jsonb,
-  updated_at     timestamptz not null default now()
+  status         text not null,
+  exercises_json jsonb,
+  updated_at     timestamptz default now()
 );
 
 create index if not exists workout_sessions_user_id_start_time_idx
@@ -72,12 +84,12 @@ create table if not exists public.favorite_workouts (
   user_id            uuid not null references auth.users (id) on delete cascade,
   name               text not null,
   description        text,
-  focus_areas        text[] not null default '{}',
+  focus_areas        text[],
   estimated_duration integer,
-  times_used         integer not null default 0,
-  created_date       text,
-  exercises_json     jsonb not null default '[]'::jsonb,
-  updated_at         timestamptz not null default now()
+  times_used         integer default 0,
+  created_date       text not null,
+  exercises_json     jsonb,
+  updated_at         timestamptz default now()
 );
 
 create index if not exists favorite_workouts_user_id_idx on public.favorite_workouts (user_id);
@@ -90,27 +102,25 @@ alter table public.workout_sessions  enable row level security;
 alter table public.favorite_workouts enable row level security;
 
 -- Én policy per tabell som dekker select/insert/update/delete: du ser og endrer
--- kun dine egne rader. `with check` hindrer at man skriver rader på andres user_id.
-drop policy if exists "Egne profiler" on public.profiles;
-create policy "Egne profiler" on public.profiles
+-- kun dine egne rader. Policyen har ingen egen `with check` – for en FOR ALL-
+-- policy bruker Postgres da `using`-uttrykket også ved insert og update, så
+-- ingen kan skrive rader på en annen brukers user_id.
+drop policy if exists "Users own data" on public.profiles;
+create policy "Users own data" on public.profiles
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id);
 
-drop policy if exists "Egne øvelser" on public.exercises;
-create policy "Egne øvelser" on public.exercises
+drop policy if exists "Users own data" on public.exercises;
+create policy "Users own data" on public.exercises
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id);
 
-drop policy if exists "Egne økter" on public.workout_sessions;
-create policy "Egne økter" on public.workout_sessions
+drop policy if exists "Users own data" on public.workout_sessions;
+create policy "Users own data" on public.workout_sessions
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id);
 
-drop policy if exists "Egne favoritter" on public.favorite_workouts;
-create policy "Egne favoritter" on public.favorite_workouts
+drop policy if exists "Users own data" on public.favorite_workouts;
+create policy "Users own data" on public.favorite_workouts
   for all to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id);
