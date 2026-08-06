@@ -23,7 +23,7 @@ create table if not exists public.profiles (
   name       text,
   age        integer,
   weight     numeric,
-  height     numeric,
+  height     integer,
   gender     text,
   goal       text,
   updated_at timestamptz not null default now()
@@ -91,26 +91,26 @@ alter table public.favorite_workouts enable row level security;
 
 -- Én policy per tabell som dekker select/insert/update/delete: du ser og endrer
 -- kun dine egne rader. `with check` hindrer at man skriver rader på andres user_id.
-drop policy if exists "Egne profiler" on public.profiles;
-create policy "Egne profiler" on public.profiles
+drop policy if exists "Users own data" on public.profiles;
+create policy "Users own data" on public.profiles
   for all to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-drop policy if exists "Egne øvelser" on public.exercises;
-create policy "Egne øvelser" on public.exercises
+drop policy if exists "Users own data" on public.exercises;
+create policy "Users own data" on public.exercises
   for all to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-drop policy if exists "Egne økter" on public.workout_sessions;
-create policy "Egne økter" on public.workout_sessions
+drop policy if exists "Users own data" on public.workout_sessions;
+create policy "Users own data" on public.workout_sessions
   for all to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-drop policy if exists "Egne favoritter" on public.favorite_workouts;
-create policy "Egne favoritter" on public.favorite_workouts
+drop policy if exists "Users own data" on public.favorite_workouts;
+create policy "Users own data" on public.favorite_workouts
   for all to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
