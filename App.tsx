@@ -83,6 +83,17 @@ const HISTORY_FILTERS = [
 
 type HistoryDateFilter = (typeof HISTORY_FILTERS)[number]['value'];
 
+/** Alt som speiles til skyen. activeSession holdes utenfor med vilje. */
+type SyncableState = {
+  profile: UserProfile;
+  exercises: ExerciseDefinition[];
+  history: WorkoutSession[];
+  favorites: FavoriteWorkout[];
+};
+
+/** Hvor lenge det må være stille før en endring pushes. */
+const SYNC_DEBOUNCE_MS = 2000;
+
 export default function App() {
   // --- State ---
   const [activeSession, setActiveSession] = useState<WorkoutSession | null>(loadActiveSession);
@@ -116,6 +127,8 @@ export default function App() {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const hasMergedRef = useRef(false);
+  const syncReadyRef = useRef(false);
+  const lastSyncedRef = useRef<string | null>(null);
 
   // --- Effects for Persistence ---
   useEffect(() => {
@@ -168,23 +181,49 @@ export default function App() {
     }).catch(error => {
       setSyncStatus('error');
       setSyncError(describeSyncError(error));
+    }).finally(() => {
+      // Først nå er det trygt å pushe: ellers ville auto-synken skrevet lokal
+      // state tilbake til skyen mens sammenslåingen fortsatt pågikk.
+      syncReadyRef.current = true;
     });
   }, [authUser]);
 
   // Background sync helper
-  const triggerSync = (state: { profile: UserProfile; exercises: ExerciseDefinition[]; history: WorkoutSession[]; favorites: FavoriteWorkout[] }) => {
+  const triggerSync = (state: SyncableState) => {
     if (!authUser) return;
+
+    // syncAll pusher hele historikken hver gang, så hopp over hvis ingenting
+    // har endret seg siden forrige vellykkede synk.
+    const signature = JSON.stringify(state);
+    if (signature === lastSyncedRef.current) return;
+
     if (!navigator.onLine) { saveSyncPending(true); setSyncStatus('offline'); return; }
     setSyncStatus('syncing');
     setSyncError(null);
     syncAll(state, authUser.id)
-      .then(() => setSyncStatus('synced'))
+      .then(() => {
+        lastSyncedRef.current = signature;
+        setSyncStatus('synced');
+      })
       .catch(error => {
         setSyncStatus('error');
         setSyncError(describeSyncError(error));
         saveSyncPending(true);
       });
   };
+
+  // Auto-synk: samler opp endringer og pusher én gang når det har vært stille
+  // en stund. Dekker øvelser og favoritter, som ellers bare ble sikkerhets-
+  // kopiert tilfeldigvis, neste gang du fullførte en økt.
+  // activeSession er bevisst utelatt – den endrer seg for hvert sett du logger.
+  useEffect(() => {
+    if (!authUser || !syncReadyRef.current) return;
+    const timer = setTimeout(
+      () => triggerSync({ profile, exercises, history, favorites: favoriteWorkouts }),
+      SYNC_DEBOUNCE_MS
+    );
+    return () => clearTimeout(timer);
+  }, [authUser, profile, exercises, history, favoriteWorkouts]);
 
   // Flush pending sync when back online
   useEffect(() => {
@@ -234,7 +273,9 @@ export default function App() {
       }, 500);
     }
 
-    // Sync to cloud if logged in
+    // En fullført økt er det mest verdifulle vi har, og appen blir gjerne lagt
+    // vekk med én gang. Push nå i stedet for å vente på debouncen – den
+    // etterfølgende auto-synken hopper over siden signaturen blir lik.
     triggerSync({ profile, exercises, history: newHistory, favorites: favoriteWorkouts });
   };
 
@@ -857,7 +898,7 @@ export default function App() {
     <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
       <ProfileView
         profile={profile}
-        onUpdateProfile={(p) => { setProfile(p); triggerSync({ profile: p, exercises, history, favorites: favoriteWorkouts }); }}
+        onUpdateProfile={setProfile}
         history={history}
         exercises={exercises}
         activeSession={activeSession}
