@@ -16,11 +16,9 @@
 -- fra initialData.ts har id `past_session_1`. Med uuid-kolonner ville de feile
 -- med "invalid input syntax for type uuid".
 --
--- To detaljer er utledet, ikke avlest, siden de ikke vises i kolonnelista:
---   * unique på profiles.user_id – pushProfile gjør upsert med
---     onConflict 'user_id', som krever en unik indeks der for å fungere
---   * `on delete cascade` på fremmednøklene – relasjonene til auth.users finnes
---     (vises i Table Editor), men slettereglene er ikke verifisert
+-- Avstemt mot det opprinnelige oppsett-skriptet i SQL Editor («User Fitness
+-- Schema»), som bekrefter unique på profiles.user_id, `on delete cascade` på
+-- fremmednøklene, presisjonen på weight og CHECK-listene på gender og goal.
 
 -- ── profiles ──────────────────────────────────────────────────────────────────
 -- Egen `id` som primærnøkkel med default: klienten sender aldri `id`, kun
@@ -30,10 +28,10 @@ create table if not exists public.profiles (
   user_id    uuid not null unique references auth.users (id) on delete cascade,
   name       text not null,
   age        integer,
-  weight     numeric,
+  weight     numeric(5,1),
   height     integer,
-  gender     text,
-  goal       text,
+  gender     text check (gender in ('male', 'female')),
+  goal       text check (goal in ('strength', 'muscle', 'weight_loss', 'endurance', 'general')),
   updated_at timestamptz default now()
 );
 
@@ -58,8 +56,6 @@ create table if not exists public.exercises (
   primary key (id, user_id)
 );
 
-create index if not exists exercises_user_id_idx on public.exercises (user_id);
-
 -- ── workout_sessions ──────────────────────────────────────────────────────────
 -- Øvelsene i en økt lagres som jsonb (samme form som WorkoutExercise[] i types.ts).
 -- `date` er text fordi feltet inneholder både «2025-12-21» og hele ISO-strenger.
@@ -75,9 +71,6 @@ create table if not exists public.workout_sessions (
   updated_at     timestamptz default now()
 );
 
-create index if not exists workout_sessions_user_id_start_time_idx
-  on public.workout_sessions (user_id, start_time desc);
-
 -- ── favorite_workouts ─────────────────────────────────────────────────────────
 create table if not exists public.favorite_workouts (
   id                 text primary key,
@@ -92,7 +85,15 @@ create table if not exists public.favorite_workouts (
   updated_at         timestamptz default now()
 );
 
-create index if not exists favorite_workouts_user_id_idx on public.favorite_workouts (user_id);
+-- ── Indekser (valgfritt tillegg) ──────────────────────────────────────────────
+-- Disse finnes IKKE i databasen i dag. Alle oppslag går på user_id, så de blir
+-- nyttige når historikken vokser. Med dagens datamengde betyr de ingenting.
+create index if not exists exercises_user_id_idx
+  on public.exercises (user_id);
+create index if not exists workout_sessions_user_id_start_time_idx
+  on public.workout_sessions (user_id, start_time desc);
+create index if not exists favorite_workouts_user_id_idx
+  on public.favorite_workouts (user_id);
 
 -- ── Row Level Security ────────────────────────────────────────────────────────
 -- Uten dette ville alle innloggede brukere kunne lese hverandres treningsdata.
@@ -104,23 +105,25 @@ alter table public.favorite_workouts enable row level security;
 -- Én policy per tabell som dekker select/insert/update/delete: du ser og endrer
 -- kun dine egne rader. Policyen har ingen egen `with check` – for en FOR ALL-
 -- policy bruker Postgres da `using`-uttrykket også ved insert og update, så
--- ingen kan skrive rader på en annen brukers user_id.
+-- ingen kan skrive rader på en annen brukers user_id. Uten `to`-ledd gjelder
+-- policyen rollen public, men uinnlogget gir auth.uid() null og treffer ingen
+-- rader.
 drop policy if exists "Users own data" on public.profiles;
 create policy "Users own data" on public.profiles
-  for all to authenticated
+  for all
   using (auth.uid() = user_id);
 
 drop policy if exists "Users own data" on public.exercises;
 create policy "Users own data" on public.exercises
-  for all to authenticated
+  for all
   using (auth.uid() = user_id);
 
 drop policy if exists "Users own data" on public.workout_sessions;
 create policy "Users own data" on public.workout_sessions
-  for all to authenticated
+  for all
   using (auth.uid() = user_id);
 
 drop policy if exists "Users own data" on public.favorite_workouts;
 create policy "Users own data" on public.favorite_workouts
-  for all to authenticated
+  for all
   using (auth.uid() = user_id);
