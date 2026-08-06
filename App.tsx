@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import {
   ExerciseDefinition,
   WorkoutSession,
@@ -51,14 +51,17 @@ import FavoritesModal from './components/FavoritesModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import RecoveryInsights from './components/RecoveryInsights';
 import PinGate from './components/PinGate';
+import LoadingFallback from './components/LoadingFallback';
+import { lazyWithReload } from './utils/lazyWithReload';
 
-// Lazy load heavy components
-const ProfileView = lazy(() => import('./components/ProfileView'));
-const InfoView = lazy(() => import('./components/InfoView'));
-const AgentView = lazy(() => import('./components/AgentView'));
-const HistoryOverviewChart = lazy(() => import('./components/HistoryOverviewChart'));
-const ExerciseDistributionChart = lazy(() => import('./components/ExerciseDistributionChart'));
-const HistoryCalendar = lazy(() => import('./components/HistoryCalendar'));
+// Lazy load heavy components. lazyWithReload henter inn ny index.html hvis
+// filen ikke finnes lenger, i stedet for å la hele appen falle sammen.
+const ProfileView = lazyWithReload(() => import('./components/ProfileView'));
+const InfoView = lazyWithReload(() => import('./components/InfoView'));
+const AgentView = lazyWithReload(() => import('./components/AgentView'));
+const HistoryOverviewChart = lazyWithReload(() => import('./components/HistoryOverviewChart'));
+const ExerciseDistributionChart = lazyWithReload(() => import('./components/ExerciseDistributionChart'));
+const HistoryCalendar = lazyWithReload(() => import('./components/HistoryCalendar'));
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
 import { TrendingUp, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, RefreshCw, Search, Download, Clock, ChevronLeft, Zap } from 'lucide-react';
 
@@ -727,21 +730,21 @@ export default function App() {
         </div>
 
         {/* Overview Chart */}
-        <Suspense fallback={<div className="h-48 bg-surface rounded-xl animate-pulse" />}>
+        <Suspense fallback={<LoadingFallback variant="block" className="h-48" />}>
           {filteredHistory.length >= 2 && (
             <HistoryOverviewChart history={filteredHistory} exercises={exercises} />
           )}
         </Suspense>
 
         {/* Exercise Distribution Chart */}
-        <Suspense fallback={<div className="h-48 bg-surface rounded-xl animate-pulse" />}>
+        <Suspense fallback={<LoadingFallback variant="block" className="h-48" />}>
           {filteredHistory.length > 0 && (
             <ExerciseDistributionChart history={filteredHistory} exercises={exercises} />
           )}
         </Suspense>
 
         {/* Calendar View */}
-        <Suspense fallback={<div className="h-96 bg-surface rounded-xl animate-pulse" />}>
+        <Suspense fallback={<LoadingFallback variant="block" className="h-96" />}>
           {filteredHistory.length > 0 ? (
             <HistoryCalendar
               history={filteredHistory}
@@ -895,7 +898,7 @@ export default function App() {
   };
 
   const renderProfile = () => (
-    <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+    <Suspense fallback={<LoadingFallback />}>
       <ProfileView
         profile={profile}
         onUpdateProfile={setProfile}
@@ -930,12 +933,12 @@ export default function App() {
         {currentScreen === Screen.ACTIVE_WORKOUT && renderActiveWorkout()}
         {currentScreen === Screen.PROFILE && renderProfile()}
         {currentScreen === Screen.INFO && (
-          <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+          <Suspense fallback={<LoadingFallback />}>
             <InfoView />
           </Suspense>
         )}
         {currentScreen === Screen.AGENT && (
-          <Suspense fallback={<div className="h-full flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+          <Suspense fallback={<LoadingFallback />}>
             <AgentView
               profile={profile}
               history={history}

@@ -13,8 +13,20 @@ export default defineConfig(() => {
     plugins: [
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
+        // 'prompt', ikke 'autoUpdate': med autoUpdate tok en ny service worker
+        // over med én gang og ryddet bort de gamle appfilene mens siden fortsatt
+        // var åpen. Skjermene som lastes ved behov (profil, info, AI, grafer)
+        // pekte da på filer som ikke fantes lenger. Nå blir den gamle versjonen
+        // stående til brukeren trykker «Oppdater» i UpdatePrompt.
+        registerType: 'prompt',
+        // Registreringen skjer i UpdatePrompt, ikke via et innsprøytet skript.
+        injectRegister: null,
         includeAssets: ['icon.svg'],
+        workbox: {
+          cleanupOutdatedCaches: true,
+          // API-rutene skal treffe serveren, ikke index.html.
+          navigateFallbackDenylist: [/^\/api\//],
+        },
         manifest: {
           name: 'Treningsappen',
           short_name: 'Trening',
