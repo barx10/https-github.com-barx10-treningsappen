@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import {
   ExerciseDefinition,
   WorkoutSession,
-  WorkoutExercise,
   Screen,
   WorkoutStatus,
-  ExerciseType,
   MuscleGroup,
   UserProfile,
   BackupData,
   FavoriteWorkout,
+  GeneratedWorkout,
   SyncStatus
 } from './types';
 import {
@@ -34,13 +33,17 @@ import { supabase } from './utils/supabaseClient';
 import { syncAll, mergeCloudIntoLocal } from './utils/syncService';
 import { exportJSON, isExportDue } from './utils/autoExport';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { getTodayDateString } from './utils/dateUtils';
+import { parseDateString } from './utils/dateUtils';
 import { calculateWeeklyVolume } from './utils/fitnessCalculations';
+import { generateRecommendations } from './utils/aiApi';
+import {
+  buildExercisesFromGenerated,
+  cloneExercisesForNewSession,
+  createSession,
+} from './utils/workoutBuilders';
 import BottomNav from './components/BottomNav';
 import AuthModal from './components/AuthModal';
-import SyncStatusIndicator from './components/SyncStatusIndicator';
 import ExerciseCard from './components/ExerciseCard';
-import WorkoutHistoryCard from './components/WorkoutHistoryCard';
 import ActiveSessionView from './components/ActiveSessionView';
 import ExerciseDetailModal from './components/ExerciseDetailModal';
 import ExerciseFormModal from './components/ExerciseFormModal';
@@ -57,7 +60,28 @@ const HistoryOverviewChart = lazy(() => import('./components/HistoryOverviewChar
 const ExerciseDistributionChart = lazy(() => import('./components/ExerciseDistributionChart'));
 const HistoryCalendar = lazy(() => import('./components/HistoryCalendar'));
 import { getRecommendations, getWeeklyStats } from './utils/fitnessCalculations';
-import { TrendingUp, Calendar, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, User, RefreshCw, Search, Download, Clock, ChevronLeft, Zap } from 'lucide-react';
+import { TrendingUp, Play, Heart, Plus, Dumbbell, Lightbulb, Flame, RefreshCw, Search, Download, Clock, ChevronLeft, Zap } from 'lucide-react';
+
+/** Colour scheme per muscle group on the exercise overview. */
+const CATEGORY_INFO: Record<MuscleGroup, { color: string; bgColor: string; iconColor: string }> = {
+  [MuscleGroup.CHEST]: { color: 'text-red-400', bgColor: 'bg-red-500/20', iconColor: 'text-red-400' },
+  [MuscleGroup.BACK]: { color: 'text-blue-400', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-400' },
+  [MuscleGroup.SHOULDERS]: { color: 'text-purple-400', bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400' },
+  [MuscleGroup.ARMS]: { color: 'text-yellow-400', bgColor: 'bg-yellow-500/20', iconColor: 'text-yellow-400' },
+  [MuscleGroup.LEGS]: { color: 'text-green-400', bgColor: 'bg-green-500/20', iconColor: 'text-green-400' },
+  [MuscleGroup.CORE]: { color: 'text-orange-400', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-400' },
+  [MuscleGroup.CARDIO]: { color: 'text-pink-400', bgColor: 'bg-pink-500/20', iconColor: 'text-pink-400' },
+  [MuscleGroup.FULL_BODY]: { color: 'text-cyan-400', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
+};
+
+const HISTORY_FILTERS = [
+  { value: 'all', label: 'Alle' },
+  { value: 'week', label: 'Siste uke' },
+  { value: 'month', label: 'Siste måned' },
+  { value: '3months', label: 'Siste 3 mnd' },
+] as const;
+
+type HistoryDateFilter = (typeof HISTORY_FILTERS)[number]['value'];
 
 export default function App() {
   // --- State ---
@@ -72,25 +96,25 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile>(loadProfile);
   const [favoriteWorkouts, setFavoriteWorkouts] = useState<FavoriteWorkout[]>(loadFavoriteWorkouts);
   const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadingAiRecommendations, setLoadingAiRecommendations] = useState(false);
   const [historySearchQuery, setHistorySearchQuery] = useState('');
-  const [historyDateFilter, setHistoryDateFilter] = useState<'all' | 'week' | 'month' | '3months'>('all');
-  const [historyDisplayLimit, setHistoryDisplayLimit] = useState(5); // Show 5 at a time
+  const [historyDateFilter, setHistoryDateFilter] = useState<HistoryDateFilter>('all');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Modals
+  const [viewingExercise, setViewingExercise] = useState<ExerciseDefinition | null>(null);
+  const [isCreatingExercise, setIsCreatingExercise] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<ExerciseDefinition | undefined>(undefined);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
 
   // Auth + Sync state
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const hasMergedRef = useRef(false);
-
-  // Reset display limit when filter or search changes
-  useEffect(() => {
-    setHistoryDisplayLimit(5);
-  }, [historySearchQuery, historyDateFilter]);
-
-  // Ingen automatisk AI-henting
 
   // --- Effects for Persistence ---
   useEffect(() => {
@@ -162,12 +186,6 @@ export default function App() {
     return () => window.removeEventListener('online', handleOnline);
   }, [authUser, profile, exercises, history, favoriteWorkouts]);
 
-  // Modals State
-  const [viewingExercise, setViewingExercise] = useState<ExerciseDefinition | null>(null);
-  const [isCreatingExercise, setIsCreatingExercise] = useState(false);
-  const [exerciseToEdit, setExerciseToEdit] = useState<ExerciseDefinition | undefined>(undefined);
-  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
-
   // --- Actions ---
 
   const handleRefresh = () => {
@@ -216,128 +234,52 @@ export default function App() {
     }
   };
 
-  const handleStartGeneratedWorkout = (workout: any) => {
-    console.log('=== handleStartGeneratedWorkout called ===');
-    console.log('Workout data:', JSON.stringify(workout, null, 2));
-    console.log('Available exercises:', exercises.length);
-    
-    try {
-      // Filter out exercises that don't exist in our database
-      const validExercises = workout.exercises
-        .map((ex: any) => {
-          console.log(`Processing exercise: ${ex.exerciseId}`);
-          const exercise = exercises.find(e => e.id === ex.exerciseId);
-          if (!exercise) {
-            console.warn(`Exercise not found: ${ex.exerciseId}`);
-            console.log('Available exercise IDs:', exercises.map(e => e.id));
-            return null;
-          }
-          
-          console.log(`Found exercise: ${exercise.name}`);
-          const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
-          const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
-          
-          return {
-            id: crypto.randomUUID(),
-            exerciseDefinitionId: exercise.id,
-            sets: Array(ex.sets || 3).fill(null).map(() => ({
-              id: crypto.randomUUID(),
-              weight: 0,
-              reps: isCardio ? 0 : repsValue,
-              durationMinutes: isCardio ? 10 : 0,
-              completed: false,
-            })),
-            notes: ex.notes || `AI anbefaling: ${ex.reps} reps, ${ex.restTime}s hvile`,
-          };
-        })
-        .filter((ex): ex is WorkoutExercise => ex !== null);
+  const handleStartGeneratedWorkout = (workout: GeneratedWorkout) => {
+    const validExercises = buildExercisesFromGenerated(
+      workout,
+      exercises,
+      (reps, rest) => `AI anbefaling: ${reps} reps, ${rest}s hvile`
+    );
 
-      console.log('Valid exercises found:', validExercises.length);
-
-      if (validExercises.length === 0) {
-        alert('Ingen gyldige øvelser funnet i treningsopplegget. Prøv å generere på nytt.');
-        return;
-      }
-
-      const newSession: WorkoutSession = {
-        id: crypto.randomUUID(),
-        name: workout.name || 'AI-generert økt',
-        date: getTodayDateString(),
-        startTime: new Date().toISOString(),
-        status: WorkoutStatus.ACTIVE,
-        exercises: validExercises,
-      };
-      
-      console.log('Creating new session:', newSession);
-      setActiveSession(newSession);
-      console.log('Switching to ACTIVE_WORKOUT screen');
-      setCurrentScreen(Screen.ACTIVE_WORKOUT);
-      console.log('=== handleStartGeneratedWorkout completed ===');
-    } catch (error) {
-      console.error('Error starting generated workout:', error);
-      alert('Kunne ikke starte treningsøkten. Prøv igjen.');
+    if (validExercises.length === 0) {
+      alert('Ingen gyldige øvelser funnet i treningsopplegget. Prøv å generere på nytt.');
+      return;
     }
+
+    setActiveSession(createSession(workout.name || 'AI-generert økt', validExercises));
+    setCurrentScreen(Screen.ACTIVE_WORKOUT);
   };
 
   const handleSaveExercise = (exercise: ExerciseDefinition) => {
-    if (exerciseToEdit) {
-      // Update existing
-      setExercises(exercises.map(e => e.id === exercise.id ? exercise : e));
-    } else {
-      // Create new
-      setExercises([exercise, ...exercises]);
-    }
+    setExercises(prev =>
+      exerciseToEdit ? prev.map(e => (e.id === exercise.id ? exercise : e)) : [exercise, ...prev]
+    );
     setIsCreatingExercise(false);
     setExerciseToEdit(undefined);
   };
 
   const handleDeleteExercise = (id: string) => {
-    setExercises(exercises.filter(e => e.id !== id));
+    setExercises(prev => prev.filter(e => e.id !== id));
     setViewingExercise(null);
   };
 
-  const handleEditExercise = (updatedExercise: ExerciseDefinition) => {
-    setExercises(exercises.map(e => e.id === updatedExercise.id ? updatedExercise : e));
-    setViewingExercise(null); // Close detail modal
-    // Optionally we could keep it open with the new data, but closing is simpler for now
-  };
-
   const handleDeleteHistory = (sessionId: string) => {
-    setHistory(history.filter(s => s.id !== sessionId));
+    setHistory(prev => prev.filter(s => s.id !== sessionId));
   };
 
-  const handleSaveFavoriteWorkout = (workout: any, name?: string) => {
+  const handleSaveFavoriteWorkout = (workout: GeneratedWorkout, name?: string) => {
     const favoriteWorkout: FavoriteWorkout = {
       id: crypto.randomUUID(),
       name: name || workout.name || 'Favoritt økt',
-      exercises: workout.exercises.map((ex: any) => {
-        const exercise = exercises.find(e => e.id === ex.exerciseId);
-        if (!exercise) return null;
-
-        const repsValue = parseInt(ex.reps?.split('-')[0]) || 10;
-        const isCardio = exercise.type === ExerciseType.CARDIO || exercise.type === ExerciseType.DURATION;
-
-        return {
-          id: crypto.randomUUID(),
-          exerciseDefinitionId: exercise.id,
-          sets: Array(ex.sets || 3).fill(null).map(() => ({
-            id: crypto.randomUUID(),
-            weight: 0,
-            reps: isCardio ? 0 : repsValue,
-            durationMinutes: isCardio ? 10 : 0,
-            completed: false,
-          })),
-          notes: ex.notes || `${ex.reps} reps, ${ex.restTime}s hvile`,
-        };
-      }).filter((ex: WorkoutExercise | null) => ex !== null),
+      exercises: buildExercisesFromGenerated(workout, exercises),
       createdDate: new Date().toISOString(),
       description: workout.description,
       focusAreas: workout.focusAreas,
-      estimatedDuration: workout.estimatedDuration,
+      estimatedDuration: workout.estimatedDuration ?? workout.totalDuration,
       timesUsed: 0,
     };
 
-    setFavoriteWorkouts([favoriteWorkout, ...favoriteWorkouts]);
+    setFavoriteWorkouts(prev => [favoriteWorkout, ...prev]);
   };
 
   const handleSaveSessionAsFavorite = (session: WorkoutSession) => {
@@ -347,55 +289,55 @@ export default function App() {
     const favoriteWorkout: FavoriteWorkout = {
       id: crypto.randomUUID(),
       name: name || session.name,
-      exercises: session.exercises.map(ex => ({
-        ...ex,
-        id: crypto.randomUUID(),
-        sets: ex.sets.map(set => ({
-          ...set,
-          id: crypto.randomUUID(),
-          completed: false, // Reset completion status
-        })),
-      })),
+      exercises: cloneExercisesForNewSession(session.exercises),
       createdDate: new Date().toISOString(),
       timesUsed: 0,
     };
 
-    setFavoriteWorkouts([favoriteWorkout, ...favoriteWorkouts]);
+    setFavoriteWorkouts(prev => [favoriteWorkout, ...prev]);
     alert('Økten er lagret som favoritt! 💚');
   };
 
   const handleDeleteFavoriteWorkout = (id: string) => {
-    setFavoriteWorkouts(favoriteWorkouts.filter(f => f.id !== id));
+    setFavoriteWorkouts(prev => prev.filter(f => f.id !== id));
   };
 
   const handleStartFavoriteWorkout = (favorite: FavoriteWorkout) => {
-    const newSession: WorkoutSession = {
-      id: crypto.randomUUID(),
-      name: favorite.name,
-      date: getTodayDateString(),
-      startTime: new Date().toISOString(),
-      status: WorkoutStatus.ACTIVE,
-      exercises: favorite.exercises.map(ex => ({
-        ...ex,
-        id: crypto.randomUUID(),
-        sets: ex.sets.map(set => ({
-          ...set,
-          id: crypto.randomUUID(),
-          completed: false,
-        })),
-      })),
-    };
+    const newSession = createSession(
+      favorite.name,
+      cloneExercisesForNewSession(favorite.exercises)
+    );
 
-    // Increment times used
-    setFavoriteWorkouts(favoriteWorkouts.map(f =>
-      f.id === favorite.id
-        ? { ...f, timesUsed: (f.timesUsed || 0) + 1 }
-        : f
-    ));
+    setFavoriteWorkouts(prev =>
+      prev.map(f => (f.id === favorite.id ? { ...f, timesUsed: (f.timesUsed || 0) + 1 } : f))
+    );
 
     setActiveSession(newSession);
     setCurrentScreen(Screen.ACTIVE_WORKOUT);
     setShowFavoritesModal(false);
+  };
+
+  const handleFetchAiRecommendations = async (forceRefresh = false) => {
+    setLoadingAiRecommendations(true);
+    setAiError(null);
+
+    try {
+      if (!forceRefresh) {
+        const cached = loadCachedRecommendations();
+        if (cached) {
+          setAiRecommendations(cached);
+          return;
+        }
+      }
+
+      const recommendations = await generateRecommendations(profile, history, exercises);
+      setAiRecommendations(recommendations);
+      saveCachedRecommendations(recommendations);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'Kunne ikke hente AI-analyse');
+    } finally {
+      setLoadingAiRecommendations(false);
+    }
   };
 
   const handleImportData = (data: Partial<BackupData>) => {
@@ -449,11 +391,50 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  // --- Derived data ---
+
+  const weekStats = useMemo(
+    () => getWeeklyStats(history, exercises, profile.weight),
+    [history, exercises, profile.weight]
+  );
+
+  const weeklyVolume = useMemo(() => calculateWeeklyVolume(history), [history]);
+
+  const localRecommendations = useMemo(
+    () => (profile.goal ? getRecommendations(profile, history, exercises) : []),
+    [profile, history, exercises]
+  );
+
+  const filteredHistory = useMemo(() => {
+    let result = history;
+
+    if (historyDateFilter !== 'all') {
+      const cutoffDate = new Date();
+      if (historyDateFilter === 'week') cutoffDate.setDate(cutoffDate.getDate() - 7);
+      if (historyDateFilter === 'month') cutoffDate.setMonth(cutoffDate.getMonth() - 1);
+      if (historyDateFilter === '3months') cutoffDate.setMonth(cutoffDate.getMonth() - 3);
+
+      result = result.filter(s => parseDateString(s.date) >= cutoffDate);
+    }
+
+    const query = historySearchQuery.trim().toLowerCase();
+    if (query) {
+      result = result.filter(session =>
+        session.name.toLowerCase().includes(query) ||
+        session.exercises.some(ex => {
+          const def = exercises.find(e => e.id === ex.exerciseDefinitionId);
+          return def?.name.toLowerCase().includes(query) ||
+                 def?.muscleGroup.toLowerCase().includes(query);
+        })
+      );
+    }
+
+    return result;
+  }, [history, exercises, historyDateFilter, historySearchQuery]);
+
   // --- Views ---
 
   const renderHome = () => {
-    const recentWorkouts = history.slice(0, 2);
-
     return (
       <div className="p-4 pb-24 space-y-6">
         <header className="flex justify-between items-center mb-6 mt-2">
@@ -474,57 +455,25 @@ export default function App() {
         </header>
 
         {/* Stats */}
-        {(() => {
-          const weekStats = getWeeklyStats(history, exercises, profile.weight);
-
-          return (
-            <div className="grid grid-cols-4 gap-3">
-              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
-                <div className="flex items-center space-x-1 text-secondary mb-1">
-                  <TrendingUp size={14} />
-                  <span className="font-bold text-[10px] uppercase tracking-wide">Uken</span>
-                </div>
-                <div className="text-xl font-bold text-white">
-                  {weekStats.workouts}
-                  <span className="text-xs text-muted font-normal ml-1">økter</span>
-                </div>
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { Icon: TrendingUp, tone: 'text-secondary', label: 'Uken', value: weekStats.workouts, unit: 'økter' },
+            { Icon: Flame, tone: 'text-orange-400', label: 'Kcal', value: weekStats.totalCalories || 0 },
+            { Icon: Clock, tone: 'text-emerald-400', label: 'Min', value: weekStats.totalMinutes },
+            { Icon: Dumbbell, tone: 'text-primary', label: 'Løftet', value: weeklyVolume, unit: 'tonn' },
+          ].map(({ Icon, tone, label, value, unit }) => (
+            <div key={label} className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
+              <div className={`flex items-center space-x-1 mb-1 ${tone}`}>
+                <Icon size={14} />
+                <span className="font-bold text-[10px] uppercase tracking-wide">{label}</span>
               </div>
-
-              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
-                <div className="flex items-center space-x-1 text-orange-400 mb-1">
-                  <Flame size={14} />
-                  <span className="font-bold text-[10px] uppercase tracking-wide">Kcal</span>
-                </div>
-                <div className="text-xl font-bold text-white">
-                  {weekStats.totalCalories || 0}
-                  <span className="text-xs text-muted font-normal ml-1"></span>
-                </div>
-              </div>
-
-              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
-                <div className="flex items-center space-x-1 text-emerald-400 mb-1">
-                  <Clock size={14} />
-                  <span className="font-bold text-[10px] uppercase tracking-wide">Min</span>
-                </div>
-                <div className="text-xl font-bold text-white">
-                  {weekStats.totalMinutes}
-                  <span className="text-xs text-muted font-normal ml-1"></span>
-                </div>
-              </div>
-
-              <div className="bg-surface p-3 rounded-xl border border-slate-700 flex flex-col justify-between">
-                <div className="flex items-center space-x-1 text-primary mb-1">
-                  <Dumbbell size={14} />
-                  <span className="font-bold text-[10px] uppercase tracking-wide">Løftet</span>
-                </div>
-                <div className="text-xl font-bold text-white">
-                  {calculateWeeklyVolume(history)}
-                  <span className="text-xs text-muted font-normal ml-1">tonn</span>
-                </div>
+              <div className="text-xl font-bold text-white">
+                {value}
+                {unit && <span className="text-xs text-muted font-normal ml-1">{unit}</span>}
               </div>
             </div>
-          );
-        })()}
+          ))}
+        </div>
 
         {/* Recovery Insights */}
         <RecoveryInsights key={isRefreshing ? 'refreshing' : 'stable'} history={history} exercises={exercises} />
@@ -537,7 +486,7 @@ export default function App() {
               Anbefalinger for deg
             </h2>
             <div className="space-y-2">
-              {getRecommendations(profile, history, exercises).map((rec: string, idx: number) => (
+              {localRecommendations.map((rec: string, idx: number) => (
                 <div key={idx} className="text-sm text-slate-200 flex items-start">
                   <span className="mr-2 mt-0.5">•</span>
                   <span>{rec}</span>
@@ -546,35 +495,7 @@ export default function App() {
             </div>
             {/* AI Recommendations Button */}
             <button
-              onClick={async () => {
-                setLoadingAiRecommendations(true);
-                try {
-                  // Check cache first
-                  const cachedRecs = loadCachedRecommendations();
-                  if (cachedRecs) {
-                    console.log('Using cached recommendations');
-                    setAiRecommendations(cachedRecs);
-                    setLoadingAiRecommendations(false);
-                    return;
-                  }
-
-                  // No cache, make API call
-                  const response = await fetch('/api/generate-recommendations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ profile, history, exercises })
-                  });
-                  const data = await response.json();
-                  if (data.recommendations) {
-                    setAiRecommendations(data.recommendations);
-                    saveCachedRecommendations(data.recommendations);
-                  }
-                } catch (error) {
-                  console.error('Failed to get AI recommendations:', error);
-                } finally {
-                  setLoadingAiRecommendations(false);
-                }
-              }}
+              onClick={() => handleFetchAiRecommendations()}
               disabled={loadingAiRecommendations}
               className="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
@@ -584,6 +505,12 @@ export default function App() {
             <p className="text-[10px] text-slate-500 text-center mt-1">
               🔒 Sender treningsdata til Google Gemini API
             </p>
+            {/* Error */}
+            {aiError && (
+              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/40 rounded-lg text-xs text-red-300">
+                {aiError}
+              </div>
+            )}
             {/* AI Recommendations Display */}
             {aiRecommendations.length > 0 && (
               <div className="mt-4 pt-4 border-t border-purple-500/30 space-y-3 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -596,12 +523,21 @@ export default function App() {
                     <p className="text-sm text-slate-200 leading-relaxed">{rec}</p>
                   </div>
                 ))}
-                <button
-                  onClick={() => setAiRecommendations([])}
-                  className="text-xs text-slate-400 hover:text-white underline mt-2"
-                >
-                  Skjul AI-analyse
-                </button>
+                <div className="flex items-center gap-4 mt-2">
+                  <button
+                    onClick={() => handleFetchAiRecommendations(true)}
+                    disabled={loadingAiRecommendations}
+                    className="text-xs text-purple-300 hover:text-white underline disabled:opacity-50"
+                  >
+                    Ny analyse
+                  </button>
+                  <button
+                    onClick={() => setAiRecommendations([])}
+                    className="text-xs text-slate-400 hover:text-white underline"
+                  >
+                    Skjul AI-analyse
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -689,48 +625,6 @@ export default function App() {
   };
 
   const renderHistory = () => {
-    const parseDateString = (dateStr: string): Date => {
-      if (dateStr.length === 10 && dateStr.includes('-')) {
-        const [year, month, day] = dateStr.split('-').map(Number);
-        return new Date(year, month - 1, day);
-      }
-      const date = new Date(dateStr);
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    };
-
-    // Filter by date range
-    let filteredHistory = history;
-    const now = new Date();
-    
-    if (historyDateFilter !== 'all') {
-      const cutoffDate = new Date(now);
-      if (historyDateFilter === 'week') {
-        cutoffDate.setDate(now.getDate() - 7);
-      } else if (historyDateFilter === 'month') {
-        cutoffDate.setMonth(now.getMonth() - 1);
-      } else if (historyDateFilter === '3months') {
-        cutoffDate.setMonth(now.getMonth() - 3);
-      }
-      
-      filteredHistory = history.filter(s => {
-        const sessionDate = parseDateString(s.date);
-        return sessionDate >= cutoffDate;
-      });
-    }
-
-    // Filter by search query
-    if (historySearchQuery.trim()) {
-      const query = historySearchQuery.toLowerCase();
-      filteredHistory = filteredHistory.filter(session => 
-        session.name.toLowerCase().includes(query) ||
-        session.exercises.some(ex => {
-          const def = exercises.find(e => e.id === ex.exerciseDefinitionId);
-          return def?.name.toLowerCase().includes(query) || 
-                 def?.muscleGroup.toLowerCase().includes(query);
-        })
-      );
-    }
-
     return (
       <div className="p-4 pb-24 space-y-4">
         <div className="flex items-center justify-between mt-2 mb-4">
@@ -759,15 +653,10 @@ export default function App() {
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {[
-              { value: 'all', label: 'Alle' },
-              { value: 'week', label: 'Siste uke' },
-              { value: 'month', label: 'Siste måned' },
-              { value: '3months', label: 'Siste 3 mnd' }
-            ].map(filter => (
+            {HISTORY_FILTERS.map(filter => (
               <button
                 key={filter.value}
-                onClick={() => setHistoryDateFilter(filter.value as typeof historyDateFilter)}
+                onClick={() => setHistoryDateFilter(filter.value)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   historyDateFilter === filter.value
                     ? 'bg-primary text-white'
@@ -820,18 +709,6 @@ export default function App() {
   };
 
   const renderExercises = () => {
-    // Kategori-info med farger
-    const categoryInfo: Record<MuscleGroup, { color: string; bgColor: string; iconColor: string }> = {
-      [MuscleGroup.CHEST]: { color: 'text-red-400', bgColor: 'bg-red-500/20', iconColor: 'text-red-400' },
-      [MuscleGroup.BACK]: { color: 'text-blue-400', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-400' },
-      [MuscleGroup.SHOULDERS]: { color: 'text-purple-400', bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400' },
-      [MuscleGroup.ARMS]: { color: 'text-yellow-400', bgColor: 'bg-yellow-500/20', iconColor: 'text-yellow-400' },
-      [MuscleGroup.LEGS]: { color: 'text-green-400', bgColor: 'bg-green-500/20', iconColor: 'text-green-400' },
-      [MuscleGroup.CORE]: { color: 'text-orange-400', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-400' },
-      [MuscleGroup.CARDIO]: { color: 'text-pink-400', bgColor: 'bg-pink-500/20', iconColor: 'text-pink-400' },
-      [MuscleGroup.FULL_BODY]: { color: 'text-cyan-400', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
-    };
-
     // Tell antall øvelser per kategori
     const getExerciseCount = (group: MuscleGroup) => {
       return exercises.filter(e => e.muscleGroup === group).length;
@@ -857,7 +734,7 @@ export default function App() {
 
           <div className="grid grid-cols-2 gap-3">
             {muscleGroups.map((group) => {
-              const info = categoryInfo[group];
+              const info = CATEGORY_INFO[group];
               const count = getExerciseCount(group);
 
               return (
@@ -882,7 +759,7 @@ export default function App() {
       .filter(e => e.muscleGroup === selectedMuscleGroup)
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    const info = categoryInfo[selectedMuscleGroup];
+    const info = CATEGORY_INFO[selectedMuscleGroup];
 
     return (
       <div className="p-4 pb-24 space-y-4">
@@ -981,8 +858,6 @@ export default function App() {
       />
     </Suspense>
   );
-
-  const [showSplash, setShowSplash] = useState(true);
 
   if (showSplash) {
     return (
