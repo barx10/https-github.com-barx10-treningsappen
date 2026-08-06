@@ -74,11 +74,25 @@ export const saveExercises = (exercises: ExerciseDefinition[]) => {
     }
 };
 
+/**
+ * Id-en til demo-økta som tidligere ble seedet inn ved første oppstart.
+ * Seedingen er fjernet (se initialData.ts); dette rydder bort økta hos dem
+ * som allerede har fått den lagret lokalt.
+ */
+export const DEMO_SESSION_ID = 'past_session_1';
+
 export const loadHistory = (): WorkoutSession[] => {
     if (!hasStorage()) return createInitialHistory();
     try {
         const stored = window.localStorage.getItem(STORAGE_KEYS.HISTORY);
-        return stored ? JSON.parse(stored) : createInitialHistory();
+        if (!stored) return createInitialHistory();
+
+        const parsed: WorkoutSession[] = JSON.parse(stored);
+        const cleaned = parsed.filter(s => s.id !== DEMO_SESSION_ID);
+        if (cleaned.length !== parsed.length) {
+            window.localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
+        }
+        return cleaned;
     } catch (error) {
         console.error('Failed to load history', error);
         return createInitialHistory();
