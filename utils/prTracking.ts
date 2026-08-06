@@ -105,6 +105,96 @@ export function calculatePersonalRecords(
 }
 
 /**
+ * Folder de avhukede settene fra den pågående økta inn i rekordene fra
+ * historikken.
+ *
+ * Alternativet – å regne ut alt på nytt med økta lagt til historikken – kostet
+ * 89 øvelser ganget med hele historikken, og det for hvert eneste tastetrykk i
+ * vekt- og reps-feltene. Her rører vi bare de settene som faktisk er hukket av.
+ * Resultatet er det samme: historikken ligger i bunn, og økta får bare flytte
+ * en rekord hvis den er strengt bedre.
+ */
+export function withSessionRecords(
+  base: Map<string, PersonalRecord>,
+  session: WorkoutSession | null,
+  exercises: ExerciseDefinition[]
+): Map<string, PersonalRecord> {
+  if (!session) return base;
+
+  // Er samme øvelse lagt inn to ganger i økta, teller bare den første. Det er
+  // slik calculatePersonalRecords leser historikken, og uten den samme regelen
+  // ville en rekord vist seg under økta og forsvunnet igjen når den ble lagret.
+  const firstPerExercise = session.exercises.filter(
+    (exercise, index) =>
+      session.exercises.findIndex(
+        e => e.exerciseDefinitionId === exercise.exerciseDefinitionId
+      ) === index
+  );
+
+  const completed = firstPerExercise
+    .map(exercise => ({ exercise, sets: exercise.sets.filter(set => set.completed) }))
+    .filter(entry => entry.sets.length > 0);
+
+  if (completed.length === 0) return base;
+
+  const merged = new Map(base);
+
+  completed.forEach(({ exercise, sets }) => {
+    const definition = exercises.find(e => e.id === exercise.exerciseDefinitionId);
+    if (!definition) return;
+
+    const existing = merged.get(definition.id);
+    const record: PersonalRecord = existing ? { ...existing } : {
+      exerciseId: definition.id,
+      exerciseName: definition.name,
+      maxWeight: 0,
+      maxWeightDate: '',
+      maxReps: 0,
+      maxRepsDate: '',
+      maxVolume: 0,
+      maxVolumeDate: '',
+      totalVolume: 0,
+      totalVolumeDate: '',
+    };
+
+    let sessionTotalVolume = 0;
+
+    sets.forEach(set => {
+      if (set.weight && set.weight > record.maxWeight) {
+        record.maxWeight = set.weight;
+        record.maxWeightDate = session.date;
+      }
+
+      if (set.reps && set.reps > record.maxReps) {
+        record.maxReps = set.reps;
+        record.maxRepsDate = session.date;
+      }
+
+      if (set.weight && set.reps) {
+        const setVolume = set.weight * set.reps;
+        if (setVolume > record.maxVolume) {
+          record.maxVolume = setVolume;
+          record.maxVolumeDate = session.date;
+        }
+        sessionTotalVolume += setVolume;
+      }
+    });
+
+    if (sessionTotalVolume > record.totalVolume) {
+      record.totalVolume = sessionTotalVolume;
+      record.totalVolumeDate = session.date;
+    }
+
+    // Samme regel som over: uten vekt eller reps er det ingen rekord å ta vare på.
+    if (record.maxWeight > 0 || record.maxReps > 0) {
+      merged.set(definition.id, record);
+    }
+  });
+
+  return merged;
+}
+
+/**
  * Check if a set is a new PR or near PR
  */
 export function checkPRStatus(

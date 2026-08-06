@@ -1,16 +1,52 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   WorkoutSession,
   WorkoutExercise,
   ExerciseDefinition,
   WorkoutSet,
-  ExerciseType,
-  WorkoutStatus
+  ExerciseType
 } from '../types';
 import { Plus, Trash2, Check, Search, X, Clock, TrendingUp, Heart } from 'lucide-react';
 import PRCelebration from './PRCelebration';
-import { calculatePersonalRecords, checkPRStatus } from '../utils/prTracking';
+import { calculatePersonalRecords, checkPRStatus, withSessionRecords } from '../utils/prTracking';
 import RestTimer from './RestTimer';
+
+/** Sekunder siden økta startet, med tak på 12 timer for datoer langt tilbake. */
+const elapsedSince = (startTime: string): number => {
+  const elapsed = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
+  return Math.min(Math.max(elapsed, 0), 12 * 3600);
+};
+
+const formatTime = (seconds: number) => {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+/**
+ * Klokka tikker i sitt eget lille tre.
+ *
+ * Lå den inne i selve øktvisningen, tegnet hele øvelseslista seg på nytt hvert
+ * sekund – med alle inputfeltene, midt mens du sto og skrev i dem.
+ */
+const SessionClock: React.FC<{ startTime: string }> = ({ startTime }) => {
+  const [elapsed, setElapsed] = useState(() => elapsedSince(startTime));
+
+  useEffect(() => {
+    setElapsed(elapsedSince(startTime));
+    const interval = setInterval(() => setElapsed(elapsedSince(startTime)), 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return (
+    <div className="text-secondary font-mono text-sm font-medium flex items-center">
+      <Clock size={14} className="mr-1" />
+      {formatTime(elapsed)}
+    </div>
+  );
+};
 
 interface ActiveSessionViewProps {
   session: WorkoutSession | null;
@@ -34,41 +70,39 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   onSaveAsFavorite
 }) => {
   const [isExerciseModalOpen, setExerciseModalOpen] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState<number | null>(null);
   const exerciseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [prCelebration, setPRCelebration] = useState<{ exerciseName: string; prType: 'weight' | 'reps' | 'volume'; value: number } | null>(null);
   
-  // Calculate PRs including current session's completed sets
-  const personalRecords = React.useMemo(() => {
-    // Include current session in history for PR calculation if it has completed sets
-    const historyWithCurrent = session && session.exercises.some(ex => ex.sets.some(s => s.completed))
-      ? [...history, { ...session, status: WorkoutStatus.COMPLETED }]
-      : history;
-    return calculatePersonalRecords(historyWithCurrent, exercises);
-  }, [history, exercises, session]);
+  // Rekordene fra historikken endrer seg bare når historikken gjør det.
+  const historyRecords = useMemo(
+    () => calculatePersonalRecords(history, exercises),
+    [history, exercises]
+  );
 
-  // Timer Logic
-  useEffect(() => {
-    if (!session) return;
-    const interval = setInterval(() => {
-      const start = new Date(session.startTime).getTime();
-      const now = new Date().getTime();
-      const elapsed = Math.floor((now - start) / 1000);
-      // Cap at 12 hours to avoid runaway timer for past-dated sessions
-      setElapsedTime(Math.min(elapsed, 12 * 3600));
-    }, 1000);
-    return () => clearInterval(interval);
+  /**
+   * Alt i økta som kan flytte en rekord. `session` er et nytt objekt for hvert
+   * tastetrykk, så den duger ikke som nøkkel – denne endrer seg bare når et
+   * sett faktisk hukes av eller et avhuket sett endres.
+   */
+  const completedSetsKey = useMemo(() => {
+    if (!session) return '';
+    const sets = session.exercises
+      .map(ex => `${ex.exerciseDefinitionId}=${ex.sets
+        .filter(set => set.completed)
+        .map(set => `${set.weight || 0}x${set.reps || 0}`)
+        .join(',')}`)
+      .join('|');
+    return `${session.date}#${sets}`;
   }, [session]);
 
-  const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  const personalRecords = useMemo(
+    // completedSetsKey dekker nøyaktig det withSessionRecords leser fra økta,
+    // så session hører ikke hjemme i avhengighetslista her.
+    () => withSessionRecords(historyRecords, session, exercises),
+    [historyRecords, exercises, completedSetsKey]
+  );
 
   if (!session) return null;
 
@@ -124,17 +158,21 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   };
 
   const handleAddSet = (exerciseIndex: number) => {
-    const updatedExercises = [...session.exercises];
-    const previousSet = updatedExercises[exerciseIndex].sets[updatedExercises[exerciseIndex].sets.length - 1];
-
-    updatedExercises[exerciseIndex].sets.push({
+    const previousSet = session.exercises[exerciseIndex].sets.at(-1);
+    const newSet: WorkoutSet = {
       id: crypto.randomUUID(),
       weight: previousSet ? previousSet.weight : 0,
       reps: previousSet ? previousSet.reps : 0,
       durationMinutes: previousSet ? previousSet.durationMinutes : 0,
       completed: false
+    };
+
+    onUpdateSession({
+      ...session,
+      exercises: session.exercises.map((exercise, index) =>
+        index === exerciseIndex ? { ...exercise, sets: [...exercise.sets, newSet] } : exercise
+      )
     });
-    onUpdateSession({ ...session, exercises: updatedExercises });
   };
 
   const removeExercise = (exerciseId: string, shouldConfirm = true) => {
@@ -146,8 +184,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   };
 
   const handleRemoveSet = (exerciseIndex: number, setIndex: number) => {
-    const updatedExercises = [...session.exercises];
-    const targetExercise = updatedExercises[exerciseIndex];
+    const targetExercise = session.exercises[exerciseIndex];
     if (!targetExercise) return;
 
     if (targetExercise.sets.length === 1) {
@@ -157,19 +194,30 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
       return;
     }
 
-    targetExercise.sets = targetExercise.sets.filter((_, idx) => idx !== setIndex);
-    updatedExercises[exerciseIndex] = targetExercise;
-    onUpdateSession({ ...session, exercises: updatedExercises });
+    onUpdateSession({
+      ...session,
+      exercises: session.exercises.map((exercise, index) =>
+        index === exerciseIndex
+          ? { ...exercise, sets: exercise.sets.filter((_, idx) => idx !== setIndex) }
+          : exercise
+      )
+    });
   };
 
   const handleUpdateSet = (exIndex: number, setIndex: number, field: keyof WorkoutSet, value: number | boolean) => {
-    const updatedExercises = [...session.exercises];
     const updatedSet = {
-      ...updatedExercises[exIndex].sets[setIndex],
+      ...session.exercises[exIndex].sets[setIndex],
       [field]: value
     };
-    updatedExercises[exIndex].sets[setIndex] = updatedSet;
-    
+
+    // Nye objekter hele veien ned. Den forrige utgaven skrev rett inn i settet
+    // som allerede lå i state, og da så ikke React at noe var endret.
+    const updatedExercises = session.exercises.map((exercise, index) =>
+      index === exIndex
+        ? { ...exercise, sets: exercise.sets.map((set, idx) => (idx === setIndex ? updatedSet : set)) }
+        : exercise
+    );
+
     // Check for PR when completing a set
     if (field === 'completed' && value === true) {
       const exerciseId = updatedExercises[exIndex].exerciseDefinitionId;
@@ -188,10 +236,15 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
     }
     
     onUpdateSession({ ...session, exercises: updatedExercises });
-    
-    // Set as current exercise and scroll to it
-    if (field === 'completed' || currentExerciseIndex !== exIndex) {
+
+    // Merk øvelsen du holder på med. Å scrolle dit gjør vi bare når du hukker
+    // av et sett – gjorde vi det mens du skrev, slåss den myke scrollingen med
+    // tastaturet på mobil og stjal fokus fra feltet.
+    if (currentExerciseIndex !== exIndex) {
       setCurrentExerciseIndex(exIndex);
+    }
+
+    if (field === 'completed') {
       setTimeout(() => {
         exerciseRefs.current[exIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -212,10 +265,7 @@ const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
         <div className="p-4 flex justify-between items-center">
           <div>
             <h2 className="font-bold text-lg text-white">{session.name}</h2>
-            <div className="text-secondary font-mono text-sm font-medium flex items-center">
-              <Clock size={14} className="mr-1" />
-              {formatTime(elapsedTime)}
-            </div>
+            <SessionClock startTime={session.startTime} />
           </div>
           <div className="flex gap-2">
             {onSaveAsFavorite && (

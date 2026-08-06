@@ -53,6 +53,7 @@ import RecoveryInsights from './components/RecoveryInsights';
 import PinGate from './components/PinGate';
 import LoadingFallback from './components/LoadingFallback';
 import { lazyWithReload } from './utils/lazyWithReload';
+import { useDebouncedSave } from './utils/useDebouncedSave';
 
 // Lazy load heavy components. lazyWithReload henter inn ny index.html hvis
 // filen ikke finnes lenger, i stedet for å la hele appen falle sammen.
@@ -142,9 +143,10 @@ export default function App() {
     saveHistory(history);
   }, [history]);
 
-  useEffect(() => {
-    saveActiveSession(activeSession);
-  }, [activeSession]);
+  // Den aktive økta endrer seg for hvert tastetrykk, så den skrives ned når det
+  // har vært stille et øyeblikk. De andre endrer seg sjelden nok til at de kan
+  // gå rett ned.
+  useDebouncedSave(activeSession, saveActiveSession);
 
   useEffect(() => {
     saveProfile(profile);

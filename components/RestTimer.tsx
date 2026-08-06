@@ -16,6 +16,13 @@ interface TimerState {
 
 const TIMER_STORAGE_KEY = 'treningsappen_rest_timer';
 
+/**
+ * Hvor ofte vi regner ut hvor mye som er igjen. Nedtellingen vises i hele
+ * sekunder, så oftere enn dette gir ingenting – og siden vi regner ut fra
+ * starttidspunktet, ikke teller nedover, går den ikke ut av takt.
+ */
+const TICK_MS = 250;
+
 const loadTimerState = (): TimerState | null => {
     try {
         const stored = localStorage.getItem(TIMER_STORAGE_KEY);
@@ -70,17 +77,52 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
     const remainingRef = useRef<number>(savedState?.remaining ?? 90);
     const hasPlayedBeepsRef = useRef<Set<number>>(new Set());
 
-    // Save state to localStorage whenever it changes
+    // Siste kjente tilstand, klar til å skrives ned når appen legges vekk.
+    const latestState = useRef<TimerState>({
+        timeLeft,
+        isRunning,
+        initialTime,
+        isCompact,
+        startTime: startTimeRef.current,
+        remaining: remainingRef.current
+    });
+
     useEffect(() => {
-        saveTimerState({
+        latestState.current = {
             timeLeft,
             isRunning,
             initialTime,
             isCompact,
             startTime: startTimeRef.current,
             remaining: remainingRef.current
-        });
-    }, [timeLeft, isRunning, initialTime, isCompact]);
+        };
+    });
+
+    /**
+     * Lagres bare når noe faktisk skjer – start, pause, nullstilling, ny
+     * forhåndsvalgt tid. Før lå det et JSON.stringify og et localStorage-skriv
+     * bak hvert sekund av nedtellingen, midt oppå den aktive økta. Vi mister
+     * ingenting på det: nedtellingen bygges opp igjen fra starttidspunktet.
+     */
+    useEffect(() => {
+        saveTimerState(latestState.current);
+    }, [isRunning, initialTime, isCompact]);
+
+    // Legges appen vekk mens timeren går, tar vi vare på det som står nå.
+    useEffect(() => {
+        const flush = () => saveTimerState(latestState.current);
+        const flushIfHidden = () => {
+            if (document.visibilityState === 'hidden') flush();
+        };
+
+        window.addEventListener('pagehide', flush);
+        document.addEventListener('visibilitychange', flushIfHidden);
+        return () => {
+            window.removeEventListener('pagehide', flush);
+            document.removeEventListener('visibilitychange', flushIfHidden);
+            flush();
+        };
+    }, []);
 
     // Initialize AudioContext on first user interaction
     const ensureAudioContext = () => {
@@ -151,7 +193,8 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
                 const elapsed = Math.floor((Date.now() - startTimeRef.current!) / 1000);
                 const newTimeLeft = Math.max(0, remainingRef.current - elapsed);
 
-                setTimeLeft(newTimeLeft);
+                // Samme sekund som sist? Da lar vi React være i fred.
+                setTimeLeft(previous => (previous === newTimeLeft ? previous : newTimeLeft));
 
                 // Play beep sound at 3, 2, 1 seconds
                 if (newTimeLeft > 0 && newTimeLeft <= 3 && !hasPlayedBeepsRef.current.has(newTimeLeft)) {
@@ -171,8 +214,7 @@ const RestTimer: React.FC<RestTimerProps> = ({ onComplete }) => {
             // Update immediately
             updateTimer();
 
-            // Then update every 100ms
-            timerRef.current = setInterval(updateTimer, 100);
+            timerRef.current = setInterval(updateTimer, TICK_MS);
         } else {
             if (timerRef.current) {
                 clearInterval(timerRef.current);
