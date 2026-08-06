@@ -7,13 +7,19 @@
 --   profiles, exercises, workout_sessions, favorite_workouts
 --
 -- Merk om id-kolonnene: de er `text`, ikke `uuid`. Egendefinerte øvelser får
--- id på formen `custom_<uuid>` (se components/ExerciseFormModal.tsx), som ikke
--- er en gyldig uuid. Med uuid-kolonner ville hver eneste synk feile med
--- "invalid input syntax for type uuid".
+-- id på formen `custom_<uuid>` (se components/ExerciseFormModal.tsx), og
+-- eksempeløkta fra initialData.ts har id `past_session_1`. Med uuid-kolonner
+-- ville de feile med "invalid input syntax for type uuid".
+--
+-- Filen speiler databasen slik den står i prosjektet «treningsappen». Endrer du
+-- noe i Supabase-dashboardet, oppdater denne filen også.
 
 -- ── profiles ──────────────────────────────────────────────────────────────────
+-- Egen `id` som primærnøkkel, og `user_id` unik: klienten gjør upsert med
+-- onConflict 'user_id' og sender aldri `id`, så id må ha default.
 create table if not exists public.profiles (
-  user_id    uuid primary key references auth.users (id) on delete cascade,
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null unique references auth.users (id) on delete cascade,
   name       text,
   age        integer,
   weight     numeric,
