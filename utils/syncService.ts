@@ -2,6 +2,25 @@ import { supabase } from './supabaseClient';
 import { UserProfile, ExerciseDefinition, WorkoutSession, FavoriteWorkout } from '../types';
 import { saveLastSyncAt, saveSyncPending } from './storage';
 
+/**
+ * Oversetter Supabase-feil til noe som faktisk sier hva som er galt.
+ * De vanligste er at skjemaet aldri er kjørt, eller at RLS mangler policy.
+ */
+export const describeSyncError = (error: unknown): string => {
+    const err = error as { code?: string; message?: string } | null;
+    const message = err?.message || 'Ukjent feil';
+
+    // PGRST205 = PostgREST finner ikke tabellen, 42P01 = undefined_table
+    if (err?.code === 'PGRST205' || err?.code === '42P01' || /schema cache|does not exist/i.test(message)) {
+        return `Tabellen mangler i Supabase. Kjør supabase/schema.sql i SQL Editor. (${message})`;
+    }
+    // 42501 = insufficient_privilege, typisk manglende RLS-policy
+    if (err?.code === '42501' || /row-level security/i.test(message)) {
+        return `Ingen tilgang til dataene. Sjekk at RLS-policyene i supabase/schema.sql er kjørt. (${message})`;
+    }
+    return message;
+};
+
 // ── Profiles ──────────────────────────────────────────────────────────────────
 
 export const pushProfile = async (profile: UserProfile, userId: string): Promise<void> => {
@@ -23,8 +42,9 @@ export const pullProfile = async (userId: string): Promise<UserProfile | null> =
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
-    if (error || !data) return null;
+        .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
     return {
         name: data.name,
         age: data.age ?? undefined,
@@ -66,8 +86,8 @@ export const pullExercises = async (userId: string): Promise<ExerciseDefinition[
         .select('*')
         .eq('user_id', userId)
         .eq('is_custom', true);
-    if (error || !data) return [];
-    return data.map(row => ({
+    if (error) throw error;
+    return (data ?? []).map(row => ({
         id: row.id,
         name: row.name,
         muscleGroup: row.muscle_group,
@@ -108,8 +128,8 @@ export const pullHistory = async (userId: string): Promise<WorkoutSession[]> => 
         .select('*')
         .eq('user_id', userId)
         .order('start_time', { ascending: false });
-    if (error || !data) return [];
-    return data.map(row => ({
+    if (error) throw error;
+    return (data ?? []).map(row => ({
         id: row.id,
         name: row.name,
         date: row.date,
@@ -147,8 +167,8 @@ export const pullFavorites = async (userId: string): Promise<FavoriteWorkout[]> 
         .from('favorite_workouts')
         .select('*')
         .eq('user_id', userId);
-    if (error || !data) return [];
-    return data.map(row => ({
+    if (error) throw error;
+    return (data ?? []).map(row => ({
         id: row.id,
         name: row.name,
         exercises: row.exercises_json ?? [],
