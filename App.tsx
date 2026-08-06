@@ -29,8 +29,8 @@ import {
   saveSyncPending,
 } from './utils/storage';
 import { loadProfile, saveProfile } from './utils/profileStorage';
-import { supabase } from './utils/supabaseClient';
-import { syncAll, mergeCloudIntoLocal } from './utils/syncService';
+import { supabase, isSupabaseConfigured } from './utils/supabaseClient';
+import { syncAll, mergeCloudIntoLocal, describeSyncError } from './utils/syncService';
 import { exportJSON, isExportDue } from './utils/autoExport';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { parseDateString } from './utils/dateUtils';
@@ -113,6 +113,7 @@ export default function App() {
   // Auth + Sync state
   const [authUser, setAuthUser] = useState<SupabaseUser | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const hasMergedRef = useRef(false);
 
@@ -139,6 +140,7 @@ export default function App() {
 
   // Auth listener
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
     supabase.auth.getSession().then(({ data }) => {
       setAuthUser(data.session?.user ?? null);
     });
@@ -153,6 +155,7 @@ export default function App() {
     if (!authUser || hasMergedRef.current) return;
     hasMergedRef.current = true;
     setSyncStatus('syncing');
+    setSyncError(null);
     mergeCloudIntoLocal(
       { profile, exercises, history, favorites: favoriteWorkouts },
       authUser.id
@@ -162,7 +165,10 @@ export default function App() {
       if (merged.exercises) setExercises(merged.exercises);
       if (merged.favorites) setFavoriteWorkouts(merged.favorites);
       setSyncStatus('synced');
-    }).catch(() => setSyncStatus('error'));
+    }).catch(error => {
+      setSyncStatus('error');
+      setSyncError(describeSyncError(error));
+    });
   }, [authUser]);
 
   // Background sync helper
@@ -170,9 +176,14 @@ export default function App() {
     if (!authUser) return;
     if (!navigator.onLine) { saveSyncPending(true); setSyncStatus('offline'); return; }
     setSyncStatus('syncing');
+    setSyncError(null);
     syncAll(state, authUser.id)
       .then(() => setSyncStatus('synced'))
-      .catch(() => { setSyncStatus('error'); saveSyncPending(true); });
+      .catch(error => {
+        setSyncStatus('error');
+        setSyncError(describeSyncError(error));
+        saveSyncPending(true);
+      });
   };
 
   // Flush pending sync when back online
@@ -853,8 +864,9 @@ export default function App() {
         onImportData={handleImportData}
         authUser={authUser}
         syncStatus={syncStatus}
+        syncError={syncError}
         onShowAuthModal={() => setShowAuthModal(true)}
-        onSignOut={async () => { await supabase.auth.signOut(); setAuthUser(null); hasMergedRef.current = false; setSyncStatus('idle'); }}
+        onSignOut={async () => { await supabase.auth.signOut(); setAuthUser(null); hasMergedRef.current = false; setSyncStatus('idle'); setSyncError(null); }}
       />
     </Suspense>
   );

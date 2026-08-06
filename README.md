@@ -104,6 +104,41 @@ Bygget ender opp i `dist/` mappen.
    - Vercel vil automatisk bygge og deploye
    - Fremtidige pushes til main-branch vil automatisk deployes
 
+## ☁️ Sky-backup med Supabase (valgfritt)
+
+Appen fungerer helt fint uten Supabase – da lagres alt lokalt i nettleseren.
+Vil du ha innlogging og synk mellom enheter, må tre ting på plass:
+
+1. **Opprett et Supabase-prosjekt** på [supabase.com](https://supabase.com).
+
+2. **Kjør databaseskjemaet.** Åpne SQL Editor i Supabase, lim inn hele
+   [`supabase/schema.sql`](supabase/schema.sql) og kjør den. Den lager de fire
+   tabellene appen bruker (`profiles`, `exercises`, `workout_sessions`,
+   `favorite_workouts`) og skrur på Row Level Security, slik at hver bruker kun
+   ser sine egne data. Filen er trygg å kjøre flere ganger.
+
+3. **Sett miljøvariablene** (lokalt i `.env`, i produksjon under Vercel →
+   Environment Variables):
+   ```
+   VITE_SUPABASE_URL=https://<prosjekt>.supabase.co
+   VITE_SUPABASE_KEY=<anon public key>
+   ```
+   Bruk **anon**-nøkkelen, aldri `service_role` – den ligger i klientbundelen.
+
+Innlogging skjer med engangskode på e-post, så e-post-provideren må være aktiv
+under Authentication → Providers.
+
+### Feilsøking
+
+Under Profil → Sky-backup vises status. Får du «Feil», står forklaringen rett
+under. De vanligste:
+
+| Melding | Årsak |
+|---|---|
+| «Tabellen mangler i Supabase» | `supabase/schema.sql` er ikke kjørt (eller bare deler av den) |
+| «Ingen tilgang til dataene» | RLS er på, men policyene i skjemafilen mangler |
+| «Sky-backup krever at miljøvariablene …» | `VITE_SUPABASE_URL`/`VITE_SUPABASE_KEY` mangler |
+
 ## 🛠️ Teknologi
 
 - **Frontend:** React 19, TypeScript, Vite
@@ -111,6 +146,7 @@ Bygget ender opp i `dist/` mappen.
 - **AI:** Google Gemini 3.6 Flash (via @google/genai)
 - **Charts:** Recharts
 - **Icons:** Lucide React
+- **Sky-backup:** Supabase (auth + Postgres, valgfritt)
 - **PWA:** vite-plugin-pwa
 - **Deployment:** Vercel (serverless functions)
 

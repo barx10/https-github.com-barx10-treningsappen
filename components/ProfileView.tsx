@@ -16,11 +16,12 @@ interface ProfileViewProps {
     onImportData?: (data: Partial<BackupData>) => void;
     authUser?: SupabaseUser | null;
     syncStatus?: SyncStatus;
+    syncError?: string | null;
     onShowAuthModal?: () => void;
     onSignOut?: () => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, history, exercises, activeSession, onImportData, authUser, syncStatus = 'idle', onShowAuthModal, onSignOut }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, history, exercises, activeSession, onImportData, authUser, syncStatus = 'idle', syncError, onShowAuthModal, onSignOut }) => {
     const [name, setName] = useState(profile.name || '');
     const [age, setAge] = useState(profile.age?.toString() || '');
     const [weight, setWeight] = useState(profile.weight?.toString() || '');
@@ -541,6 +542,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile, onUpdateProfile, his
                             Logget inn som <span className="text-white">{authUser.email}</span>.
                             Dataene dine synkroniseres automatisk etter hver økt.
                         </p>
+                        {syncStatus === 'error' && syncError && (
+                            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/40 rounded-lg p-3 break-words">
+                                {syncError}
+                            </p>
+                        )}
                         <button
                             onClick={onSignOut}
                             className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
