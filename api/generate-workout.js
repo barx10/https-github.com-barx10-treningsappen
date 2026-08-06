@@ -99,7 +99,30 @@ const describeSessions = (weekHistory) => {
     .join('\n');
 };
 
-const buildPrompt = ({ profile, weekHistory, availableExercises }) =>
+/**
+ * Ekstra føringer når brukeren kommer tilbake etter et opphold. Detrening gir
+ * raskt tap av styrke og toleranse for volum, og den vanligste feilen er å
+ * starte der man slapp.
+ */
+const easeInGuidance = (daysSinceLastWorkout) => `
+VIKTIGST AV ALT – BRUKEREN KOMMER TILBAKE ETTER EN PAUSE${
+  daysSinceLastWorkout ? ` PÅ ${daysSinceLastWorkout} DAGER` : ''
+}:
+Dette er en oppstartsøkt. Disse reglene går FORAN reglene for målet over:
+- Maks 4-5 øvelser totalt, og hold økta under 45 minutter
+- 2-3 sett per øvelse, aldri flere
+- Legg deg i øvre del av rep-området med lette vekter: rundt 50-60 % av det
+  brukeren løftet før pausen. Skriv gjerne konkret vektforslag i "notes"
+- Lengre hvile enn normalt (90-120 sekunder)
+- Start med grundig oppvarming og mobilitet
+- Prioriter enkle, stabile øvelser. Unngå tunge markløft, eksplosive løft og
+  øvelser med høy skaderisiko når kroppen er utrent
+- Brukeren skal gå fra økta med krefter igjen, ikke være støl i tre dager
+- I "reasoning": si tydelig at dette er en rolig oppstart, og at volum og vekt
+  økes gradvis over de neste 2-3 ukene
+`;
+
+const buildPrompt = ({ profile, weekHistory, availableExercises, easeIn, daysSinceLastWorkout }) =>
   `Du er en personlig treningscoach. Lag et detaljert treningsopplegg basert på følgende:
 
 PROFIL:
@@ -120,6 +143,7 @@ ${availableExercises.map((e) => `- ${e.name} (${e.muscleGroup}, ${e.type}) [ID: 
 VIKTIGE REGLER FOR TILPASNING TIL MÅL:
 
 ${GOAL_GUIDANCE[profile.goal] || GOAL_GUIDANCE.general}
+${easeIn ? easeInGuidance(daysSinceLastWorkout) : ''}
 
 GENERELLE INSTRUKSJONER:
 1. Analyser hva brukeren har trent denne uken
@@ -150,7 +174,13 @@ Returner et JSON-objekt med følgende struktur (BARE JSON, ingen annen tekst):
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
 
-  const { profile, weekHistory = [], availableExercises = [] } = req.body || {};
+  const {
+    profile,
+    weekHistory = [],
+    availableExercises = [],
+    easeIn = false,
+    daysSinceLastWorkout = null,
+  } = req.body || {};
 
   if (!profile) {
     return res.status(400).json({ error: 'Profile is required' });
@@ -164,7 +194,7 @@ export default async function handler(req, res) {
 
   try {
     const workout = await generateJson(
-      buildPrompt({ profile, weekHistory, availableExercises }),
+      buildPrompt({ profile, weekHistory, availableExercises, easeIn, daysSinceLastWorkout }),
       WORKOUT_SCHEMA
     );
 
