@@ -1,8 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Sparkles, Zap, TrendingUp, Calendar, AlertCircle, Loader2, RefreshCw, X, Heart } from 'lucide-react';
+import { Sparkles, Zap, TrendingUp, Calendar, AlertCircle, Loader2, RefreshCw, X, Heart, Leaf } from 'lucide-react';
 import type { WorkoutSession, ExerciseDefinition, UserProfile, GeneratedWorkout } from '../types';
 import { loadCachedWorkout, saveCachedWorkout } from '../utils/storage';
-import { DEFAULT_AI_MODEL, generateWorkout as requestWorkout, getCompletedSessionsThisWeek } from '../utils/aiApi';
+import {
+  DEFAULT_AI_MODEL,
+  EASE_IN_THRESHOLD_DAYS,
+  generateWorkout as requestWorkout,
+  getCompletedSessionsThisWeek,
+  getDaysSinceLastWorkout,
+} from '../utils/aiApi';
 
 interface AgentViewProps {
   profile: UserProfile;
@@ -21,14 +27,22 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
   const [isCached, setIsCached] = useState(false);
 
   const weekHistory = useMemo(() => getCompletedSessionsThisWeek(history), [history]);
+  const daysSinceLastWorkout = useMemo(() => getDaysSinceLastWorkout(history), [history]);
+
+  // Har du hatt en lang pause, foreslår vi rolig oppstart – men du bestemmer.
+  const [easeIn, setEaseIn] = useState(
+    daysSinceLastWorkout !== null && daysSinceLastWorkout >= EASE_IN_THRESHOLD_DAYS
+  );
 
   const generateWorkout = async (forceRefresh = false) => {
     setIsGenerating(true);
     setError(null);
 
+    const variant = easeIn ? 'ease-in' : 'normal';
+
     try {
       if (!forceRefresh) {
-        const cachedWorkout = loadCachedWorkout(weekHistory);
+        const cachedWorkout = loadCachedWorkout(weekHistory, variant);
         if (cachedWorkout) {
           setGeneratedWorkout(cachedWorkout);
           setIsCached(true);
@@ -36,8 +50,11 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
         }
       }
 
-      const workout = await requestWorkout(profile, weekHistory, exercises);
-      saveCachedWorkout(workout, weekHistory);
+      const workout = await requestWorkout(profile, weekHistory, exercises, {
+        enabled: easeIn,
+        daysSinceLastWorkout,
+      });
+      saveCachedWorkout(workout, weekHistory, variant);
       setGeneratedWorkout(workout);
       setIsCached(false);
     } catch (err) {
@@ -155,6 +172,32 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
           <Sparkles size={10} />
           <span>Modell: {generatedWorkout?.model || DEFAULT_AI_MODEL}</span>
         </div>
+      </div>
+
+      {/* Rolig oppstart */}
+      <div className="bg-surface rounded-xl border border-slate-700 p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={easeIn}
+            onChange={e => setEaseIn(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-emerald-500 cursor-pointer"
+          />
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <Leaf size={15} className="text-emerald-400" />
+              <span className="text-sm font-semibold text-white">Ta det forsiktig</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed mt-1">
+              Lavere volum, moderate vekter og ekstra oppvarming. Bygg opp igjen over noen uker.
+            </p>
+            {daysSinceLastWorkout !== null && daysSinceLastWorkout >= EASE_IN_THRESHOLD_DAYS && (
+              <p className="text-[11px] text-emerald-400/90 mt-1.5">
+                Det er {daysSinceLastWorkout} dager siden forrige økt – foreslått automatisk.
+              </p>
+            )}
+          </div>
+        </label>
       </div>
 
       {/* Generate Button */}

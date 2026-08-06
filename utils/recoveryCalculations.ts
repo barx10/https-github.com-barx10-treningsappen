@@ -17,6 +17,40 @@ export interface RecoveryWarning {
 }
 
 /**
+ * Helkropp er en øvelseskategori, ikke en muskel man restituerer. Den ble
+ * tidligere listet som en egen gruppe og sto for alltid som «Aldri trent»,
+ * siden ingen økt trener «helkropp» isolert.
+ */
+const RECOVERY_MUSCLE_GROUPS = Object.values(MuscleGroup).filter(
+  g => g !== MuscleGroup.FULL_BODY
+);
+
+/** Fallback for helkroppsøvelser som ikke oppgir hvilke muskler de treffer. */
+const FULL_BODY_COVERS: MuscleGroup[] = [
+  MuscleGroup.CHEST,
+  MuscleGroup.BACK,
+  MuscleGroup.LEGS,
+  MuscleGroup.SHOULDERS,
+  MuscleGroup.ARMS,
+  MuscleGroup.CORE,
+];
+
+/**
+ * Hvilke muskelgrupper en øvelse faktisk belaster. En helkroppsøvelse teller
+ * mot musklene den treffer, ikke mot «Helkropp».
+ */
+const musclesWorkedBy = (definition: ExerciseDefinition): MuscleGroup[] => {
+  const secondary = definition.secondaryMuscleGroups ?? [];
+
+  const groups =
+    definition.muscleGroup === MuscleGroup.FULL_BODY
+      ? (secondary.length > 0 ? secondary : FULL_BODY_COVERS)
+      : [definition.muscleGroup, ...secondary];
+
+  return groups.filter(g => g !== MuscleGroup.FULL_BODY);
+};
+
+/**
  * Calculate days since each muscle group was last trained
  */
 export function calculateMuscleGroupRecovery(
@@ -38,29 +72,20 @@ export function calculateMuscleGroupRecovery(
   completedSessions.forEach(session => {
     session.exercises.forEach(exercise => {
       const def = exercises.find(e => e.id === exercise.exerciseDefinitionId);
-      if (def) {
-        const sessionDate = parseDateString(session.date);
-        
-        // Count primary muscle group
-        if (!muscleGroupLastTrained.has(def.muscleGroup)) {
-          muscleGroupLastTrained.set(def.muscleGroup, sessionDate);
+      if (!def) return;
+
+      const sessionDate = parseDateString(session.date);
+      // Øktene er sortert nyeste først, så første treff er siste gang trent.
+      musclesWorkedBy(def).forEach(muscle => {
+        if (!muscleGroupLastTrained.has(muscle)) {
+          muscleGroupLastTrained.set(muscle, sessionDate);
         }
-        
-        // Count secondary muscle groups
-        if (def.secondaryMuscleGroups) {
-          def.secondaryMuscleGroups.forEach(secondaryMuscle => {
-            if (!muscleGroupLastTrained.has(secondaryMuscle)) {
-              muscleGroupLastTrained.set(secondaryMuscle, sessionDate);
-            }
-          });
-        }
-      }
+      });
     });
   });
 
   // Calculate recovery status for each muscle group
-  const allMuscleGroups = Object.values(MuscleGroup);
-  return allMuscleGroups.map(muscleGroup => {
+  return RECOVERY_MUSCLE_GROUPS.map(muscleGroup => {
     const lastDate = muscleGroupLastTrained.get(muscleGroup);
     const daysSince = lastDate
       ? Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))

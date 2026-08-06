@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import { UserProfile, ExerciseDefinition, WorkoutSession, FavoriteWorkout } from '../types';
-import { saveLastSyncAt, saveSyncPending } from './storage';
+import { saveLastSyncAt, saveSyncPending, DEMO_SESSION_ID } from './storage';
 
 /**
  * Oversetter Supabase-feil til noe som faktisk sier hva som er galt.
@@ -223,7 +223,11 @@ export const mergeCloudIntoLocal = async (
 
     if (cloudSessions.length > 0) {
         const localIds = new Set(state.history.map(s => s.id));
-        const newFromCloud = cloudSessions.filter(s => !localIds.has(s.id));
+        // Demo-økta kan fortsatt ligge i skyen fra før seedingen ble fjernet.
+        // Uten dette ville den dukket opp igjen ved hver innlogging.
+        const newFromCloud = cloudSessions.filter(
+            s => !localIds.has(s.id) && s.id !== DEMO_SESSION_ID
+        );
         if (newFromCloud.length > 0) {
             merged.history = [...state.history, ...newFromCloud].sort(
                 (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()

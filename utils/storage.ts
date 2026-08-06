@@ -74,11 +74,25 @@ export const saveExercises = (exercises: ExerciseDefinition[]) => {
     }
 };
 
+/**
+ * Id-en til demo-økta som tidligere ble seedet inn ved første oppstart.
+ * Seedingen er fjernet (se initialData.ts); dette rydder bort økta hos dem
+ * som allerede har fått den lagret lokalt.
+ */
+export const DEMO_SESSION_ID = 'past_session_1';
+
 export const loadHistory = (): WorkoutSession[] => {
     if (!hasStorage()) return createInitialHistory();
     try {
         const stored = window.localStorage.getItem(STORAGE_KEYS.HISTORY);
-        return stored ? JSON.parse(stored) : createInitialHistory();
+        if (!stored) return createInitialHistory();
+
+        const parsed: WorkoutSession[] = JSON.parse(stored);
+        const cleaned = parsed.filter(s => s.id !== DEMO_SESSION_ID);
+        if (cleaned.length !== parsed.length) {
+            window.localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(cleaned));
+        }
+        return cleaned;
     } catch (error) {
         console.error('Failed to load history', error);
         return createInitialHistory();
@@ -125,11 +139,19 @@ interface CachedWorkout {
     weekHistoryHash: string;
 }
 
-const hashWeekHistory = (history: any[]): string => {
-    return JSON.stringify(history.map(s => ({ date: s.date, exercises: s.exercises.length })));
+/**
+ * Cachenøkkel for et generert opplegg. `variant` skiller varianter av samme uke
+ * - uten den ville en rolig oppstartsøkt og en vanlig økt delt cache, og
+ * bryteren i AI-visningen ville ikke hatt noen effekt før dagen etter.
+ */
+const hashWeekHistory = (history: any[], variant = ''): string => {
+    return JSON.stringify({
+        variant,
+        sessions: history.map(s => ({ date: s.date, exercises: s.exercises.length })),
+    });
 };
 
-export const loadCachedWorkout = (currentWeekHistory: any[]): any | null => {
+export const loadCachedWorkout = (currentWeekHistory: any[], variant = ''): any | null => {
     if (!hasStorage()) return null;
     try {
         const stored = window.localStorage.getItem(STORAGE_KEYS.AI_WORKOUT_CACHE);
@@ -143,7 +165,7 @@ export const loadCachedWorkout = (currentWeekHistory: any[]): any | null => {
         const isToday = cachedDate.toDateString() === now.toDateString();
         
         // Check if week history has changed
-        const currentHash = hashWeekHistory(currentWeekHistory);
+        const currentHash = hashWeekHistory(currentWeekHistory, variant);
         const historyUnchanged = cached.weekHistoryHash === currentHash;
         
         if (isToday && historyUnchanged) {
@@ -157,13 +179,13 @@ export const loadCachedWorkout = (currentWeekHistory: any[]): any | null => {
     }
 };
 
-export const saveCachedWorkout = (workout: any, weekHistory: any[]) => {
+export const saveCachedWorkout = (workout: any, weekHistory: any[], variant = '') => {
     if (!hasStorage()) return;
     try {
         const cached: CachedWorkout = {
             workout,
             timestamp: Date.now(),
-            weekHistoryHash: hashWeekHistory(weekHistory)
+            weekHistoryHash: hashWeekHistory(weekHistory, variant)
         };
         window.localStorage.setItem(STORAGE_KEYS.AI_WORKOUT_CACHE, JSON.stringify(cached));
     } catch (error) {

@@ -871,24 +871,16 @@ export const createSessionB = (): WorkoutSession => ({
   ]
 });
 
-export const createInitialHistory = (): WorkoutSession[] => {
-  // Lager en "fullført" Økt A for et par dager siden for å vise historikk
-  const date = new Date();
-  date.setDate(date.getDate() - 2);
-
-  const session = createSessionA();
-  session.id = 'past_session_1';
-  session.status = WorkoutStatus.COMPLETED; // Corrected syntax from previous version
-  session.date = getDateString(date);
-  session.startTime = date.toISOString();
-  session.endTime = new Date(date.getTime() + 45 * 60000).toISOString(); // 45 min later
-  session.exercises.forEach(ex => ex.sets.forEach(s => {
-    s.completed = true;
-    s.weight = 10; // Mock data
-  }));
-
-  return [session];
-};
+/**
+ * Historikken starter tom.
+ *
+ * Tidligere ble det seedet en «fullført» demo-økt datert to dager tilbake
+ * (id `past_session_1`, alle sett på 10 kg). Den talte som en ekte økt i
+ * ukesstatistikk, restitusjonsstatus og «dager siden forrige økt», og ble
+ * synket til skyen som om den var trent. Bedre med en tom historikk enn en
+ * som lyver.
+ */
+export const createInitialHistory = (): WorkoutSession[] => [];
 
 export const createEmptySession = (): WorkoutSession => ({
   id: crypto.randomUUID(),

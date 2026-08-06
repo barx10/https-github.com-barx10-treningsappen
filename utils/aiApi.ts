@@ -23,6 +23,24 @@ export const getCompletedSessionsThisWeek = (history: WorkoutSession[]): Workout
   );
 };
 
+/** Etter så mange dagers opphold foreslår appen en rolig oppstart. */
+export const EASE_IN_THRESHOLD_DAYS = 21;
+
+/**
+ * Dager siden siste fullførte økt, eller null hvis det ikke finnes noen.
+ */
+export const getDaysSinceLastWorkout = (history: WorkoutSession[]): number | null => {
+  const dates = history
+    .filter(s => s.status === WorkoutStatus.COMPLETED)
+    .map(s => parseDateString(s.date).getTime());
+
+  if (dates.length === 0) return null;
+
+  const today = new Date();
+  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.floor((midnight.getTime() - Math.max(...dates)) / 86_400_000);
+};
+
 const readError = async (response: Response): Promise<string> => {
   try {
     const body = await response.json();
@@ -84,9 +102,15 @@ const summarizeSession = (session: WorkoutSession, exercises: ExerciseDefinition
 export const generateWorkout = (
   profile: UserProfile,
   weekHistory: WorkoutSession[],
-  exercises: ExerciseDefinition[]
+  exercises: ExerciseDefinition[],
+  easeIn: { enabled: boolean; daysSinceLastWorkout: number | null } = {
+    enabled: false,
+    daysSinceLastWorkout: null,
+  }
 ): Promise<GeneratedWorkout> =>
   postJson<GeneratedWorkout>('/api/generate-workout', {
+    easeIn: easeIn.enabled,
+    daysSinceLastWorkout: easeIn.daysSinceLastWorkout,
     profile: {
       goal: profile.goal || 'general',
       age: profile.age,
