@@ -41,9 +41,13 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            recharts: ['recharts'],
-            vendor: ['react', 'react-dom']
+          // Split by resolved path - the object form left `vendor` empty because
+          // React is pulled in via react/jsx-runtime and react-dom/client.
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            if (/node_modules\/(recharts|d3-|victory-)/.test(id)) return 'recharts';
+            if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return 'vendor';
+            if (id.includes('@supabase')) return 'supabase';
           }
         }
       }

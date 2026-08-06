@@ -58,13 +58,15 @@ Denne guiden viser deg hvordan du setter opp AI-funksjonen i treningsappen.
 
 ## 💰 Prising
 
-Gemini 2.0 Flash er **gratis** for normal bruk:
-- **Gratis tier:** 1500 requests/dag (15 requests/minutt)
-- **Kostnad:** $0 (innenfor gratis tier)
+Appen bruker `gemini-3.6-flash`. Modellen har en gratis tier med rate limits, som
+holder for normal privat bruk. På betalt tier koster den $1,50 per million
+input-tokens og $7,50 per million output-tokens.
 
-For de fleste private brukere vil den gratis tieret være mer enn nok.
+Vil du bytte modell trenger du ikke endre kode – sett miljøvariabelen
+`GEMINI_MODEL` (f.eks. en rimeligere lite-modell), eventuelt
+`GEMINI_THINKING_LEVEL` (`MINIMAL`/`LOW`/`MEDIUM`/`HIGH`).
 
-[Les mer om Gemini prising](https://ai.google.dev/pricing)
+[Les mer om Gemini prising](https://ai.google.dev/gemini-api/docs/pricing)
 
 ## ⚠️ Sikkerhet
 

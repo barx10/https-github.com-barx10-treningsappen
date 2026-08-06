@@ -108,7 +108,7 @@ Bygget ender opp i `dist/` mappen.
 
 - **Frontend:** React 19, TypeScript, Vite
 - **Styling:** Tailwind CSS 4
-- **AI:** Google Gemini 2.0 Flash (via @google/genai)
+- **AI:** Google Gemini 3.6 Flash (via @google/genai)
 - **Charts:** Recharts
 - **Icons:** Lucide React
 - **PWA:** vite-plugin-pwa
@@ -128,7 +128,7 @@ Bygget ender opp i `dist/` mappen.
 
 ## 🤖 AI-funksjoner
 
-Appen bruker Google Gemini 2.0 Flash for:
+Appen bruker Google Gemini 3.6 Flash for:
 
 - **Treningsopplegg**: Genererer personlige økter basert på:
   - Dine mål (styrke, muskelvekst, kondisjon)
@@ -137,9 +137,14 @@ Appen bruker Google Gemini 2.0 Flash for:
   
 - **Smarte anbefalinger**: Foreslår neste øvelse basert på muskelgrupper du har trent
 
-### Kostnad
-Gemini 2.0 Flash er **gratis** opp til 1500 requests/dag (15 requests/minutt).  
-[Les mer om prising](https://ai.google.dev/pricing)
+### Modell og kostnad
+Standardmodellen er `gemini-3.6-flash`. Den kan overstyres uten kodeendring med
+miljøvariabelen `GEMINI_MODEL` (og `GEMINI_THINKING_LEVEL` for å justere hvor mye
+modellen "tenker": `MINIMAL`, `LOW` (default her), `MEDIUM`, `HIGH`).
+
+Gemini 3.6 Flash har en gratis tier med rate limits. På betalt tier koster den
+$1,50 per million input-tokens og $7,50 per million output-tokens.
+[Les mer om prising](https://ai.google.dev/gemini-api/docs/pricing)
 
 ## 📁 Prosjektstruktur
 

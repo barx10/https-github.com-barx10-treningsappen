@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Sparkles, Zap, TrendingUp, Calendar, AlertCircle, Loader2, RefreshCw, X, Heart } from 'lucide-react';
-import type { WorkoutSession, ExerciseDefinition, UserProfile } from '../types';
-import { loadCachedWorkout, saveCachedWorkout, clearCachedWorkout } from '../utils/storage';
+import type { WorkoutSession, ExerciseDefinition, UserProfile, GeneratedWorkout } from '../types';
+import { loadCachedWorkout, saveCachedWorkout } from '../utils/storage';
+import { DEFAULT_AI_MODEL, generateWorkout as requestWorkout, getCompletedSessionsThisWeek } from '../utils/aiApi';
 
 interface AgentViewProps {
   profile: UserProfile;
@@ -9,20 +10,6 @@ interface AgentViewProps {
   exercises: ExerciseDefinition[];
   onStartWorkout: (workout: GeneratedWorkout) => void;
   onSaveFavorite?: (workout: GeneratedWorkout, name?: string) => void;
-}
-
-interface GeneratedWorkout {
-  name: string;
-  exercises: Array<{
-    exerciseId: string;
-    sets: number;
-    reps: string;
-    restTime: number;
-    notes?: string;
-  }>;
-  totalDuration: number;
-  focusAreas: string[];
-  reasoning: string;
 }
 
 const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onStartWorkout, onSaveFavorite }) => {
@@ -33,127 +20,28 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
   const [alternativeExercises, setAlternativeExercises] = useState<ExerciseDefinition[]>([]);
   const [isCached, setIsCached] = useState(false);
 
+  const weekHistory = useMemo(() => getCompletedSessionsThisWeek(history), [history]);
+
   const generateWorkout = async (forceRefresh = false) => {
     setIsGenerating(true);
     setError(null);
 
     try {
-      // Get this week's sessions (from Monday)
-      const getStartOfWeek = () => {
-        const d = new Date();
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        d.setDate(diff);
-        d.setHours(0, 0, 0, 0);
-        return d;
-      };
-
-      const parseDateString = (dateStr: string): Date => {
-        if (dateStr.length === 10 && dateStr.includes('-')) {
-          const [year, month, day] = dateStr.split('-').map(Number);
-          return new Date(year, month - 1, day);
-        }
-        const date = new Date(dateStr);
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      };
-
-      const startOfWeek = getStartOfWeek();
-      const weekHistory = history.filter(s => {
-        const sessionDate = parseDateString(s.date);
-        return sessionDate >= startOfWeek && s.status === 'Fullført';
-      });
-
-      // Check cache first (unless force refresh)
       if (!forceRefresh) {
         const cachedWorkout = loadCachedWorkout(weekHistory);
         if (cachedWorkout) {
-          console.log('Using cached workout');
           setGeneratedWorkout(cachedWorkout);
           setIsCached(true);
-          setIsGenerating(false);
           return;
         }
       }
 
-      setIsCached(false);
-
-      // Add timeout to fetch request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-
-      console.log('Sending request to /api/generate-workout...');
-
-      const response = await fetch('/api/generate-workout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profile: {
-            goal: profile.goal || 'general',
-            age: profile.age,
-            weight: profile.weight,
-            gender: profile.gender,
-          },
-          weekHistory: weekHistory.map(s => ({
-            date: s.date,
-            exercises: s.exercises.map(e => {
-              const def = exercises.find(ex => ex.id === e.exerciseDefinitionId);
-              const completedSets = e.sets.filter(set => set.completed);
-              const totalVolume = completedSets.reduce((sum, set) =>
-                sum + ((set.weight || 0) * (set.reps || 0)), 0);
-              const maxWeight = Math.max(...completedSets.map(set => set.weight || 0), 0);
-              const totalReps = completedSets.reduce((sum, set) => sum + (set.reps || 0), 0);
-
-              return {
-                name: def?.name || 'Unknown',
-                muscleGroup: def?.muscleGroup || 'Unknown',
-                type: def?.type || 'Unknown',
-                setsCompleted: completedSets.length,
-                setsPlanned: e.sets.length,
-                totalReps,
-                maxWeight,
-                totalVolume,
-                setDetails: completedSets.map(set => ({
-                  weight: set.weight || 0,
-                  reps: set.reps || 0,
-                })),
-              };
-            }),
-          })),
-          availableExercises: exercises.map(e => ({
-            id: e.id,
-            name: e.name,
-            type: e.type,
-            muscleGroup: e.muscleGroup,
-          })),
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error:', errorText);
-        throw new Error(`API feil (${response.status}): ${errorText}`);
-      }
-
-      const workout: GeneratedWorkout = await response.json();
-      console.log('Workout generated:', workout);
-      
-      // Save to cache
+      const workout = await requestWorkout(profile, weekHistory, exercises);
       saveCachedWorkout(workout, weekHistory);
-      
       setGeneratedWorkout(workout);
       setIsCached(false);
     } catch (err) {
-      console.error('Error generating workout:', err);
-      if (err instanceof Error && err.name === 'AbortError') {
-        setError('Forespørselen tok for lang tid. Prøv igjen.');
-      } else {
-        setError(err instanceof Error ? err.message : 'Kunne ikke generere treningsopplegg');
-      }
+      setError(err instanceof Error ? err.message : 'Kunne ikke generere treningsopplegg');
     } finally {
       setIsGenerating(false);
     }
@@ -265,7 +153,7 @@ const AgentView: React.FC<AgentViewProps> = ({ profile, history, exercises, onSt
         {/* AI Model Info */}
         <div className="flex items-center gap-2 pt-2 text-[10px] text-slate-600">
           <Sparkles size={10} />
-          <span>Modell: gemini-3.1-flash-lite-preview</span>
+          <span>Modell: {generatedWorkout?.model || DEFAULT_AI_MODEL}</span>
         </div>
       </div>
 

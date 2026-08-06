@@ -95,6 +95,27 @@ export interface FavoriteWorkout {
   timesUsed?: number;
 }
 
+// AI-generated workout (response from /api/generate-workout)
+export interface GeneratedWorkoutExercise {
+  exerciseId: string;
+  sets: number;
+  reps: string;
+  restTime: number;
+  notes?: string;
+}
+
+export interface GeneratedWorkout {
+  name: string;
+  exercises: GeneratedWorkoutExercise[];
+  totalDuration: number;
+  focusAreas: string[];
+  reasoning: string;
+  description?: string;
+  estimatedDuration?: number;
+  /** Model id reported by the API, shown in the UI. */
+  model?: string;
+}
+
 export interface BackupData {
   profile: UserProfile;
   exercises: ExerciseDefinition[];
