@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, isSupabaseNetworkError, NETWORK_ERROR_MESSAGE } from './supabaseClient';
 import { UserProfile, ExerciseDefinition, WorkoutSession, FavoriteWorkout } from '../types';
 import { saveLastSyncAt, saveSyncPending, DEMO_SESSION_ID } from './storage';
 
@@ -9,6 +9,11 @@ import { saveLastSyncAt, saveSyncPending, DEMO_SESSION_ID } from './storage';
 export const describeSyncError = (error: unknown): string => {
     const err = error as { code?: string; message?: string } | null;
     const message = err?.message || 'Ukjent feil';
+
+    // Nettverksfeil kommer som «Load failed»/«Failed to fetch» og må forklares.
+    if (isSupabaseNetworkError(error)) {
+        return NETWORK_ERROR_MESSAGE;
+    }
 
     // PGRST205 = PostgREST finner ikke tabellen, 42P01 = undefined_table
     if (err?.code === 'PGRST205' || err?.code === '42P01' || /schema cache|does not exist/i.test(message)) {
