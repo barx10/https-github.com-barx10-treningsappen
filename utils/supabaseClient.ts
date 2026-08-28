@@ -11,3 +11,25 @@ export const supabase = createClient(
 );
 
 export const isSupabaseConfigured = !!SUPABASE_URL && !!SUPABASE_KEY;
+
+/**
+ * Supabase-klienten pakker nettverksfeil inn med nettleserens egen ordlyd:
+ * «Load failed» i Safari, «Failed to fetch» i Chrome. Det sier ingenting til
+ * brukeren. Den vanligste årsaken er at Supabase-prosjektet er satt på pause
+ * etter inaktivitet (gratisplanen) — da fjernes DNS-navnet til prosjektet, og
+ * alle kall dør før de når fram.
+ */
+export const isSupabaseNetworkError = (error: unknown): boolean => {
+    const err = error as { name?: string; message?: string } | null;
+    const message = err?.message ?? '';
+    return (
+        err?.name === 'AuthRetryableFetchError' ||
+        /load failed|failed to fetch|networkerror|network request failed/i.test(message)
+    );
+};
+
+/** Forklarende tekst for feil som skyldes at Supabase ikke svarer i det hele tatt. */
+export const NETWORK_ERROR_MESSAGE =
+    'Får ikke kontakt med sky-backupen. Vanligste årsak er at Supabase-prosjektet ' +
+    'er satt på pause etter inaktivitet — åpne prosjektet i Supabase-dashboardet og ' +
+    'velg «Restore». Treningsdataene dine ligger trygt lagret lokalt uansett.';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import { supabase, isSupabaseNetworkError, NETWORK_ERROR_MESSAGE } from '../utils/supabaseClient';
 import { X, Mail, Loader2, CheckCircle, KeyRound } from 'lucide-react';
 
 interface AuthModalProps {
@@ -24,7 +24,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
         });
         setLoading(false);
         if (supaError) {
-            setError(supaError.message);
+            setError(isSupabaseNetworkError(supaError) ? NETWORK_ERROR_MESSAGE : supaError.message);
         } else {
             setSent(true);
         }
@@ -42,7 +42,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
         });
         setLoading(false);
         if (supaError) {
-            setError('Ugyldig kode. Prøv igjen eller send en ny.');
+            setError(
+                isSupabaseNetworkError(supaError)
+                    ? NETWORK_ERROR_MESSAGE
+                    : 'Ugyldig kode. Prøv igjen eller send en ny.'
+            );
         } else {
             onClose();
         }
